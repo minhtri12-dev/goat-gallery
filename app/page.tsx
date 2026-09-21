@@ -458,7 +458,7 @@ export default function Home() {
           <div className="text-center md:text-center mb-12">
             <span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 02</span>
             <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Jersey Room</h3>
-            <p className="text-slate-500 mt-2">Bấm vào từng chiếc áo để lật lại và đọc lời nhắn gửi.</p>
+            <p className="text-slate-500 mt-2">Nhấn vào từng chiếc áo để đọc lời nhắn gửi.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 perspective-[1000px]">
@@ -499,7 +499,7 @@ export default function Home() {
             {/* TIÊU ĐỀ PART 03 Ở GIỮA */}
             <div className="text-center md:text-center mb-16 relative z-10">
               <span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 03</span>
-              <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">Những Câu Nói Huyền Thoại</h3>
+              <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Words Of Legends</h3>
               <p className="text-slate-500 mt-2">Dấu ấn của El Pulga trong mắt những tượng đài bóng đá thế giới.</p>
             </div>
 
