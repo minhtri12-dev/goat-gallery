@@ -38,7 +38,7 @@ const STORY_CHAPTERS = [
     id: "barcelona", chapterTitle: "02 — BARCELONA",
     parts: [
       { title: "Vươn mình", content: "Từ học viện La Masia, El Pulga vươn lên trở thành siêu sao số 1 thế giới. Đỉnh cao là năm 2012 với 91 bàn thắng – phá vỡ mọi giới hạn vật lý và logic của một cầu thủ.", img: "/lamasia1.png" },
-      { title: "Kỷ nguyên vàng", content: "Cùng với tam tấu MSN và những người đồng đội huyền thoại, anh gieo rắc nỗi khiếp sợ lên toàn Châu Âu, mang về 4 chức vô địch Champions League và vô số danh hiệu lớn nhỏ.", img: "/lamasia2.jpg" },
+      { title: "Kỷ nguyên vàng", content: "Cùng với tam tấu MSN và những người đồng đội huyền thoại, anh gieo rắc nỗi khiếp sợ lên toàn Châu Âu, mang về 5 chức vô địch Champions League và vô số danh hiệu lớn nhỏ.", img: "/lamasia2.jpg" },
       { title: "Nước mắt chia tay", content: "Ngày 8/8/2021, Messi bật khóc nức nở trong buổi họp báo tại Camp Nou. Khủng hoảng tài chính buộc anh phải rời đi, khép lại 21 năm thanh xuân rực rỡ nhất trong màu áo Blaugrana.", img: "/lamasia3.png" }
     ]
   },
@@ -55,7 +55,7 @@ const STORY_CHAPTERS = [
     parts: [
       { title: "Giải hạn", content: "Chức vô địch Copa America 2021 ngay tại thánh địa Maracanã của Brazil đã cởi bỏ gánh nặng ngàn cân đè nén suốt sự nghiệp, giải tỏa cơn khát danh hiệu ròng rã.", img: "/10.png" },
       { title: "Đỉnh cao thế giới", content: "Đêm Lusail huyền diệu năm 2022, Messi rực sáng đưa Argentina lên ngôi vô địch World Cup sau trận chung kết điên rồ nhất lịch sử, chính thức bước vào ngôi đền của những vị thần.", img: "/11.jpg" },
-      { title: "Lời chia tay (2026)", content: "Ở tuổi 39, anh nén nỗi đau mất cha, cháy hết mình đưa đội tuyển vào đến chung kết World Cup 2026. Dù chỉ giành Á quân, anh đã để lại một di sản vĩnh cửu và cái kết đẹp cho GOAT vĩ đại nhất.", img: "/12.png" }
+      { title: "Lời chia tay (2026)", content: "Ở tuổi 39, anh nén nỗi đau cha lâm bệnh nặng, cháy hết mình đưa đội tuyển vào đến chung kết World Cup 2026. Dù chỉ giành Á quân, nhưng kỳ World Cup cuối cùng này anh đã để lại màn trình diễn khiến mọi người vô cùng khâm phục.", img: "/12.png" }
     ]
   }
 ];
@@ -93,7 +93,7 @@ const STATS_DATA = [
   { label: "BÀN THẮNG SỰ NGHIỆP", value: 930 },
   { label: "KIẾN TẠO (Kỷ lục lịch sử)", value: 424 },
   { label: "SỐ TRẬN ĐẤU CHÍNH THỨC", value: 1176 },
-  { label: "DANH HIỆU (Nhiều nhất LS)", value: 48 }
+  { label: "DANH HIỆU (Nhiều nhất lịch sử)", value: 49 }
 ];
 
 const ANATOMY_DATA = [
@@ -375,7 +375,7 @@ export default function Home() {
           <h2 className="text-[8rem] md:text-[25rem] font-black text-slate-900 tracking-tighter leading-none">HISTORY</h2>
         </div>
         <div className="max-w-7xl mx-auto px-4 md:px-6 mb-24 md:mb-40 relative z-10">
-          <SectionHeader tag="Page 02" title="The Career Timeline" subtitle="Cột mốc định hình nên vị vua của môn thể thao vĩ đại nhất." />
+          <SectionHeader tag="Page 02" title="The Career Timeline" subtitle="Toàn cảnh những cột mốc định hình nên vị vua của môn thể thao vĩ đại nhất." />
           <div className="relative max-w-4xl mx-auto mt-10 md:mt-0">
             <div className="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-300 via-blue-500 to-indigo-600 transform md:-translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.5)]"></div>
             {TIMELINE_DATA.map((item, idx) => (
@@ -416,7 +416,7 @@ export default function Home() {
       {/* Page 03: The Legacy */}
       <section id="legacy" className="bg-gradient-to-bl from-sky-50 via-white to-sky-50 py-20 md:py-32 border-b border-slate-200/60 relative pb-24 md:pb-40">
         <div className="max-w-7xl mx-auto px-4 md:px-6 mb-20 md:mb-32">
-          <SectionHeader tag="Page 03" title="The Trophy Room" subtitle="Bộ sưu tập danh hiệu vĩ đại vô tiền khoáng hậu nhất lịch sử túc cầu ( còn nhiều hơn thế nữa )" />
+          <SectionHeader tag="Page 03" title="The Trophy Room" subtitle="Bộ sưu tập danh hiệu vĩ đại vô tiền khoáng hậu nhất lịch sử túc cầu ( còn nhiều hơn thế nữa)" />
           {TROPHY_CATEGORIES.map((category, index) => (
             <div key={index} className="mb-16 md:mb-20 last:mb-0">
               <h4 className="text-2xl md:text-3xl font-bold text-slate-800 mb-6 md:mb-10 border-b-2 border-sky-200 pb-2 md:pb-4 inline-block font-sans">{category.title}</h4>
@@ -443,7 +443,6 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 relative z-10">
               {STATS_DATA.map((stat, idx) => (
                 <motion.div key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }} viewport={{ once: true }} className="text-center bg-white/5 border border-white/10 p-4 md:p-8 rounded-2xl md:rounded-3xl backdrop-blur-xl hover:bg-white/10 hover:border-sky-400/50 hover:shadow-[0_0_30px_rgba(14,165,233,0.3)] transition-all duration-300 md:transform md:hover:-translate-y-2 flex flex-col justify-center items-center min-h-[120px] md:min-h-[180px]">
-                  {/* GIẢI QUYẾT LỖI CẮT CHỮ TRÊN MOBILE: Giảm font chữ, bỏ whitespace-nowrap, dùng break-words hoặc cho phép text tự co */}
                   <h4 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 mb-2 sm:mb-4 w-full flex justify-center items-center font-sans tracking-tight leading-none">
                     <Counter to={stat.value as number} />
                   </h4>
@@ -458,9 +457,9 @@ export default function Home() {
 
       {/* Page 04: The Man */}
       <section id="man" className="bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200 pt-20 md:pt-32">
-        <SectionHeader tag="Page 04" title="The Man" subtitle="Chương cuối cùng. Nhìn lại những cấu trúc làm nên một thiên tài, những màu áo đã thấm đẫm vinh quang và những lời truyền tụng sẽ còn vang vọng mãi." />
+        <SectionHeader tag="Page 04" title="The Man" subtitle="Chương cuối, cùng nhìn lại những cấu trúc làm nên một thiên tài, những màu áo đã thấm đẫm vinh quang và những lời ca tụng sẽ còn vang vọng mãi mãi." />
         <div className="max-w-7xl mx-auto px-4 md:px-6 pb-20 md:pb-32 border-b border-slate-300/50 mt-10 md:mt-16">
-          <div className="text-center mb-10 md:mb-16"><span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 01</span><h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-800">The Anatomy of a GOAT</h3><p className="text-slate-500 mt-2 text-sm md:text-base">Rê chuột (hoặc chạm) vào các điểm sáng để khám phá.</p></div>
+          <div className="text-center mb-10 md:mb-16"><span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 01</span><h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-800">The Anatomy of a GOAT</h3><p className="text-slate-500 mt-2 text-sm md:text-base">Rê chuột vào các điểm sáng để khám phá.</p></div>
           <div className="relative w-full max-w-md mx-auto h-[400px] md:h-[600px]">
             <div className="absolute inset-0 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-slate-300/60 bg-white"><img src="/anatomy-messi.png" alt="Messi Anatomy" className="w-full h-full object-cover mix-blend-darken opacity-95 pointer-events-none" /></div>
             {ANATOMY_DATA.map((spot, idx) => (
@@ -494,7 +493,6 @@ export default function Home() {
                 animate={{ rotateY: flippedJersey === jersey.id ? 180 : 0 }} 
                 transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
               >
-                {/* GIẢI QUYẾT LỖI LẬT ÁO TRÊN IOS/MOBILE BẰNG WebkitBackfaceVisibility */}
                 <div className="absolute inset-0 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden md:group-hover:border-sky-400 transition-colors flex items-center justify-center z-10" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                   <img src={jersey.image} alt={jersey.name} className="w-full h-full object-cover mix-blend-multiply pointer-events-none" />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent h-24 md:h-32 flex items-end justify-center pb-4 md:pb-6 pointer-events-none"><h4 className="font-black text-white uppercase tracking-widest text-xs md:text-sm drop-shadow-md text-center px-2 font-sans">{jersey.name}</h4></div>
@@ -525,9 +523,18 @@ export default function Home() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 md:px-6 py-24 md:py-40 flex flex-col items-center justify-center text-center bg-gradient-to-b from-[#EAEAEB] to-slate-200 relative">
-          <div className="w-24 h-24 md:w-48 md:h-48 mb-6 pointer-events-none">
-            {/* GIẢI QUYẾT LỖI CHỮ KÝ MOBILE: Thêm initial opacity và điều chỉnh viewport margin */}
-            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-xl" fill="none"><motion.path d="M 25 25 C 10 10, 10 40, 25 25 C 40 10, 60 40, 75 25 C 90 10, 90 40, 75 25 C 60 10, 40 40, 25 25 Z" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 2.5, ease: "easeInOut", delay: 0.2 }} /></svg>
+          <div className="w-32 h-32 md:w-48 md:h-48 mb-6 pointer-events-none flex items-center justify-center overflow-visible">
+            {/* GIẢI QUYẾT LỖI CHỮ KÝ MOBILE: Dùng cấu trúc cực kỳ an toàn, xoá opacity 0, đổi viewport */}
+            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-xl" fill="none">
+              <motion.path 
+                d="M 25 25 C 10 10, 10 40, 25 25 C 40 10, 60 40, 75 25 C 90 10, 90 40, 75 25 C 60 10, 40 40, 25 25 Z" 
+                stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" 
+                initial={{ pathLength: 0 }} 
+                whileInView={{ pathLength: 1 }} 
+                viewport={{ once: true, amount: 0.2 }} 
+                transition={{ duration: 2.5, ease: "easeInOut" }} 
+              />
+            </svg>
           </div>
           <p className="text-slate-700 text-lg md:text-3xl leading-relaxed max-w-4xl font-medium italic mb-8 md:mb-12 pointer-events-none px-2">"Sẽ có những số 10 mới xuất hiện, nhưng thế giới sẽ không bao giờ tìm thấy một Lionel Messi thứ hai. Cảm ơn anh vì đã biến thanh xuân của chúng tôi thành một giấc mơ tuyệt đẹp."</p>
           <h4 className="text-3xl md:text-7xl font-black text-slate-800 uppercase tracking-widest drop-shadow-sm pointer-events-none mb-10">CẢM ƠN VÌ TẤT CẢ, LEO!</h4>
