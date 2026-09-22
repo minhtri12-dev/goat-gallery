@@ -67,7 +67,7 @@ const TIMELINE_DATA = [
   { year: "2006", title: "Cúp Tai Voi & World Cup", desc: "Giành chức vô địch Champions League đầu tiên và có màn ra mắt kỳ World Cup tại Đức." },
   { year: "2009", title: "Quả bóng vàng đầu tiên", desc: "Đạt đỉnh cao phong độ với cú ăn 6 vĩ đại cùng triều đại Pep Guardiola." },
   { year: "2012", title: "Kỷ lục 91 bàn thắng", desc: "Phá vỡ mọi giới hạn vật lý và logic của bóng đá trong một năm dương lịch." },
-  { year: "2015", title: "Vô địch UCL lần thứ 4", desc: "Mảnh ghép của tam tấu MSN huyền thoại, giành cú ăn 3 thứ hai trong lịch sử CLB." },
+  { year: "2015", title: "Vô địch UCL lần thứ 5", desc: "Mảnh ghép của tam tấu MSN huyền thoại, giành cú ăn 3 thứ hai trong lịch sử CLB." },
   { year: "2021", title: "Vô địch Copa America", desc: "Chấm dứt cơn khát danh hiệu cùng ĐTQG Argentina sau nhiều năm cay đắng." },
   { year: "2022", title: "World Cup Champion & Finalissima", desc: "Đoạt cúp Liên lục địa và lên đỉnh thế giới tại Qatar, hoàn tất bộ sưu tập vĩ đại nhất." },
   { year: "2024", title: "Bảo vệ ngôi vương Copa", desc: "Tiếp tục thống trị Nam Mỹ với chức vô địch Copa America lần thứ hai liên tiếp." },
