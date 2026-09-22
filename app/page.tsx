@@ -334,7 +334,7 @@ export default function Home() {
             <span className="text-[4rem] md:text-[10rem] text-transparent [-webkit-text-stroke:1px_#ffffff] md:[-webkit-text-stroke:2px_#ffffff] drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">LEO MESSI</span>
           </motion.h2>
           <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 0.8 }} className="text-white text-sm md:text-lg max-w-2xl mb-8 font-medium mt-10 bg-black/40 px-6 py-4 rounded-xl backdrop-blur-sm border border-white/10 shadow-lg">
-            Không gian lưu trữ di sản của một huyền thoại sống. Nơi tôn vinh từng khoảnh khắc ma thuật, những bước chạy lịch sử và hành trình vĩ đại của GOAT - Lionel Messi qua góc nhìn và tâm huyết của Nguyễn Minh Trí.
+            Không gian lưu trữ di sản của một huyền thoại sống. Nơi tôn vinh từng khoảnh khắc ma thuật, những bước chạy lịch sử và hành trình vĩ đại của GOAT - Lionel Messi qua góc nhìn của MinhTri.
           </motion.p>
         </div>
         <ScrollButton to="journey" label="Page 01" hoverProps={hoverProps} />
@@ -375,7 +375,7 @@ export default function Home() {
           <h2 className="text-[8rem] md:text-[25rem] font-black text-slate-900 tracking-tighter leading-none">HISTORY</h2>
         </div>
         <div className="max-w-7xl mx-auto px-4 md:px-6 mb-24 md:mb-40 relative z-10">
-          <SectionHeader tag="Page 02" title="The Career Timeline" subtitle="Toàn cảnh những cột mốc định hình nên vị vua của môn thể thao vĩ đại nhất." />
+          <SectionHeader tag="Page 02" title="The Career Timeline" subtitle="Cột mốc định hình nên vị vua của môn thể thao vĩ đại nhất." />
           <div className="relative max-w-4xl mx-auto mt-10 md:mt-0">
             <div className="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-300 via-blue-500 to-indigo-600 transform md:-translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.5)]"></div>
             {TIMELINE_DATA.map((item, idx) => (
@@ -416,7 +416,7 @@ export default function Home() {
       {/* Page 03: The Legacy */}
       <section id="legacy" className="bg-gradient-to-bl from-sky-50 via-white to-sky-50 py-20 md:py-32 border-b border-slate-200/60 relative pb-24 md:pb-40">
         <div className="max-w-7xl mx-auto px-4 md:px-6 mb-20 md:mb-32">
-          <SectionHeader tag="Page 03" title="The Trophy Room" subtitle="Bộ sưu tập danh hiệu vĩ đại vô tiền khoáng hậu nhất lịch sử túc cầu." />
+          <SectionHeader tag="Page 03" title="The Trophy Room" subtitle="Bộ sưu tập danh hiệu vĩ đại vô tiền khoáng hậu nhất lịch sử túc cầu ( còn nhiều hơn thế nữa )" />
           {TROPHY_CATEGORIES.map((category, index) => (
             <div key={index} className="mb-16 md:mb-20 last:mb-0">
               <h4 className="text-2xl md:text-3xl font-bold text-slate-800 mb-6 md:mb-10 border-b-2 border-sky-200 pb-2 md:pb-4 inline-block font-sans">{category.title}</h4>
@@ -567,7 +567,7 @@ export default function Home() {
       </AnimatePresence>
       
       <footer className="py-6 md:py-8 text-center relative z-10 bg-slate-200 border-t border-slate-300/50">
-        <p className="text-[10px] md:text-xs tracking-widest text-slate-500 uppercase font-bold">© 2026 All rights reserved by Nguyễn Minh Trí.</p>
+        <p className="text-[10px] md:text-xs tracking-widest text-slate-500 uppercase font-bold">© 2026 All rights reserved by Nguyen Minh Tri.</p>
       </footer>
       
       <style dangerouslySetInnerHTML={{__html: `
