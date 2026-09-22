@@ -1,88 +1,261 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, useInView } from "framer-motion";
 
-// ================= DỮ LIỆU CÁC TRẠM =================
-const STORY_DATA = {
-  rosario: {
-    id: "rosario", title: "01 — ROSARIO", subtitle: "Khởi nguồn của một cậu bé không bao giờ bỏ cuộc",
-    content: "Sinh ra tại Rosario, Argentina, Messi sớm bộc lộ tài năng nhưng lại gặp vấn đề về hormone tăng trưởng. Nhỏ bé hơn bạn bè, anh vẫn không từ bỏ trái bóng. Năm 13 tuổi, Messi sang Barcelona, mở ra bước ngoặt lớn nhất cuộc đời.",
-    images: ["/rosario1.png", "/rosario2.png", "/rosario3.png"]
+// --- Types ---
+interface ModalData {
+  id?: string | number;
+  title?: string;
+  subtitle?: string;
+  content?: string;
+  images?: string[];
+  year?: string;
+  name?: string;
+  goals?: string;
+  memory?: string;
+  image?: string;
+  count?: string;
+  img?: string;
+  story?: string;
+}
+
+interface HoverProps {
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}
+
+// --- Data Configuration ---
+const STORY_CHAPTERS = [
+  {
+    id: "rosario", chapterTitle: "01 — ROSARIO",
+    parts: [
+      { title: "Khởi nguồn", content: "Sinh ra tại Rosario, Argentina, Messi sớm bộc lộ tài năng thiên bẩm với trái bóng tròn từ những con hẻm nhỏ. Đam mê mãnh liệt lớn dần cùng những cú chạm bóng đầu đời.", img: "/rosario1.png" },
+      { title: "Thử thách", content: "Nhưng số phận trêu đùa khi cậu bé được chẩn đoán mắc chứng thiếu hụt hormone tăng trưởng. Thân hình nhỏ bé không làm lung lay ý chí phi thường, anh tiêm thuốc mỗi đêm để nuôi dưỡng giấc mơ.", img: "/rosario2.png" },
+      { title: "Bước ngoặt", content: "Năm 13 tuổi, Messi cùng cha vượt đại dương sang Tây Ban Nha. Bản hợp đồng lịch sử ký vội trên chiếc khăn ăn tại Barcelona đã mở ra chương vĩ đại nhất của bóng đá nhân loại.", img: "/rosario3.png" }
+    ]
   },
-  barcelona: {
-    id: "barcelona", title: "02 — BARCELONA", subtitle: "La Masia → Barça → Huyền thoại",
-    content: "Tại Barcelona, Messi từ một cậu bé nhỏ bé trở thành nhân vật trung tâm của một trong những thời kỳ rực rỡ nhất lịch sử CLB. Năm 2012, anh ghi tới 91 bàn trong một năm dương lịch, phá kỷ lục 85 bàn của Gerd Müller. Anh liên tục tạo nên những màn trình diễn không tưởng, trong đó có các hat-trick ở những trận cầu lớn và hàng loạt khoảnh khắc tại El Clásico. Đỉnh cao là cú Remontada, sau khi Barcelona thua PSG 0–4 ở lượt đi, gần như không ai tin vào khả năng lật ngược thế cờ. Nhưng tại Camp Nou, Barça thắng 6–1, trong đó Messi ghi bàn và cùng đồng đội tạo nên một trong cuộc ngược dòng đáng nhớ nhất Champions League. Và rồi đến 23/4/2017 tại Santiago Bernabéu, Messi ghi bàn quyết định ở phút cuối giúp Barça thắng Real Madrid 3–2, rồi cởi áo giơ lên trước khán đài — bàn thắng thứ 500 cho Barcelona, khoảnh khắc khiến hàng triệu con tim Culer trên toàn thế giới vỡ oà cảm xúc. 672 bàn, hàng trăm kỷ lục và những đêm không tưởng — Barcelona chính là nơi Messi viết nên phần rực rỡ nhất của huyền thoại. Nhưng sau 17 năm do khủng hoảng tài chính nghiêm trọng khiến Barcelona không thể đăng ký hợp đồng với Messi, ngày chia tay Messi bật khóc trong buổi họp báo tại Camp Nou, khép lại 21 năm kỷ nguyên gắn bó với Barcelona.",
-    images: ["/lamasia1.png", "/lamasia2.jpg", "/lamasia3.png"]
+  {
+    id: "barcelona", chapterTitle: "02 — BARCELONA",
+    parts: [
+      { title: "Vươn mình", content: "Từ học viện La Masia, El Pulga vươn lên trở thành siêu sao số 1 thế giới. Đỉnh cao là năm 2012 với 91 bàn thắng – phá vỡ mọi giới hạn vật lý và logic của một cầu thủ.", img: "/lamasia1.png" },
+      { title: "Kỷ nguyên vàng", content: "Cùng với tam tấu MSN và những người đồng đội huyền thoại, anh gieo rắc nỗi khiếp sợ lên toàn Châu Âu, mang về 4 chức vô địch Champions League và vô số danh hiệu lớn nhỏ.", img: "/lamasia2.jpg" },
+      { title: "Nước mắt chia tay", content: "Ngày 8/8/2021, Messi bật khóc nức nở trong buổi họp báo tại Camp Nou. Khủng hoảng tài chính buộc anh phải rời đi, khép lại 21 năm thanh xuân rực rỡ nhất trong màu áo Blaugrana.", img: "/lamasia3.png" }
+    ]
   },
-  argentina: {
-    id: "argentina", title: "03 — ARGENTINA", subtitle: "Những giọt nước mắt cùng Argentina",
-    content: "Trái ngược với Barcelona, hành trình cùng Argentina từng đầy thất vọng. Messi liên tiếp thất bại ở các trận chung kết lớn. Sau thất bại tại Copa América 2016, anh thậm chí tuyên bố giã từ đội tuyển. Nhưng với ý chí và sự nổ lực không từ bỏ giấc mơ đội tuyển quốc gia của mình, anh đã trở lại Argentina chỉ 66 ngày sau đó.",
-    images: ["/7.png", "/8.png", "/9.png"]
+  {
+    id: "argentina", chapterTitle: "03 — ARGENTINA",
+    parts: [
+      { title: "Áp lực ngàn cân", content: "Những năm tháng đầu khoác áo ĐTQG đầy giông bão khi anh luôn bị đặt dưới cái bóng quá lớn của tiền bối vĩ đại Diego Maradona và sự khắt khe của quê nhà.", img: "/7.png" },
+      { title: "Gục ngã", content: "Nỗi đau tột cùng khi thất bại ở 3 trận chung kết liên tiếp (World Cup 2014, Copa 2015, 2016). Sự tuyệt vọng tột độ đã khiến anh từng thốt lên lời từ giã đội tuyển trong nước mắt.", img: "/8.png" },
+      { title: "Sự trở lại", content: "Nhưng tình yêu tổ quốc mãnh liệt đã gọi anh về chỉ sau 66 ngày. Anh đứng lên từ đống tro tàn, mang tấm băng đội trưởng và hứa sẽ mang vinh quang về cho dân tộc Argentina.", img: "/9.png" }
+    ]
   },
-  thedream: {
-    id: "thedream", title: "04 — THE DREAM", subtitle: "Copa América 2021 → World Cup 2022 & 2026",
-    content: "Sau nhiều năm thất bại và những giọt nước mắt, Messi cuối cùng cũng chạm tay vào danh hiệu lớn đầu tiên với Argentina khi vô địch Copa América 2021 tại Maracanã. Chiếc cúp ấy như cởi bỏ gánh nặng đè lên anh suốt nhiều năm, rồi tiếp tục được nối dài bằng Finalissima 2022, World Cup 2022 và Copa América 2024. Đến World Cup 2026, ở tuổi 39, Messi vẫn cùng Argentina bước vào trận chung kết thứ hai liên tiếp của họ tại World Cup. Nhưng phía sau sân cỏ, anh phải mang theo một nỗi đau riêng khi cha mình, Jorge Messi, đang chống chọi với vấn đề sức khỏe nghiêm trọng. Messi từng rơi nước mắt trong trận đấu với Algeria tại World Cup, sau đó gia đình xác nhận cha anh đang được theo dõi và điều trị, anh nén lại cảm xúc để gồng gánh đội tuyển vượt qua Cabo Verde, Thuỵ sĩ và 2 trận ngược dòng không tưởng trước Ai Cập và tuyển Anh. Ở trận đấu cuối cùng, Argentina chỉ khuất phục 0–1 trước Tây Ban Nha khi ấy với lối chơi quá toàn diện sau 120p ở chung kết World Cup 2026, khép lại giấc mơ bảo vệ danh hiệu trong nước mắt. Không lâu sau đó, Jorge Messi qua đời ở tuổi 68 sau thời gian dài lâm bệnh. Và ngày 31/8/2026, Messi chính thức nói lời chia tay đội tuyển Argentina — khép lại hơn hai thập kỷ của một hành trình bắt đầu bằng những thất bại và kết thúc với World Cup, hai Copa América cùng một di sản không thể xóa nhòa.",
-    images: ["/10.png", "/11.jpg", "/12.png"]
+  {
+    id: "thedream", chapterTitle: "04 — THE DREAM",
+    parts: [
+      { title: "Giải hạn", content: "Chức vô địch Copa America 2021 ngay tại thánh địa Maracanã của Brazil đã cởi bỏ gánh nặng ngàn cân đè nén suốt sự nghiệp, giải tỏa cơn khát danh hiệu ròng rã.", img: "/10.png" },
+      { title: "Đỉnh cao thế giới", content: "Đêm Lusail huyền diệu năm 2022, Messi rực sáng đưa Argentina lên ngôi vô địch World Cup sau trận chung kết điên rồ nhất lịch sử, chính thức bước vào ngôi đền của những vị thần.", img: "/11.jpg" },
+      { title: "Lời chia tay (2026)", content: "Ở tuổi 39, anh nén nỗi đau mất cha, cháy hết mình đưa đội tuyển vào đến chung kết World Cup 2026. Dù chỉ giành Á quân, anh đã để lại một di sản vĩnh cửu và cái kết đẹp cho GOAT vĩ đại nhất.", img: "/12.png" }
+    ]
   }
-};
+];
 
-const WORLD_CUP_BOOTS = [
-  { id: 1, year: "2006", name: "Adidas +F50.6 Tunit", goals: "1 Bàn thắng", memory: "Kỳ World Cup đầu tiên tại Đức. Chàng trai 19 tuổi mang áo số 19 ra mắt và ghi bàn ngay lập tức vào lưới Serbia & Montenegro, mở ra kỷ nguyên mới.", image: "/2006.png" },
-  { id: 2, year: "2010", name: "F50 Adizero Chameleon", goals: "0 Bàn thắng", memory: "Một kỳ World Cup buồn tại Nam Phi dưới sự dẫn dắt của huyền thoại Maradona. Messi thi đấu bùng nổ nhưng lại vô duyên đến kỳ lạ trước khung thành.", image: "/2010.png" },
-  { id: 3, year: "2014", name: "Adizero F50 Battle Pack", goals: "4 Bàn thắng", memory: "Nỗi đau Maracana. Messi đoạt Quả Bóng Vàng của giải đấu, kéo Argentina vào đến tận chung kết nhưng gục ngã đau đớn trước người Đức ở hiệp phụ.", image: "/2014.png" },
-  { id: 4, year: "2018", name: "Adidas Nemeziz 18.1", goals: "1 Bàn thắng", memory: "Kỳ World Cup đầy hỗn loạn tại Nga. Dấu ấn duy nhất là pha hãm bóng tinh tế và ghi bàn tuyệt đỉnh vào lưới Nigeria để lách qua khe cửa hẹp.", image: "/2018.png" },
-  { id: 5, year: "2022", name: "X Speedportal Leyenda", goals: "7 Bàn thắng", memory: "Vinh quang trọn vẹn. Vượt qua mọi áp lực ngàn cân, El Pulga rực sáng tại Qatar để mang về ngôi sao thứ 3 cho Argentina. Đỉnh cao tuyệt đối của bóng đá.", image: "/2022.png" },
-  { id: 6, year: "2026", name: "Adidas F50 Elite Messi 2026", goals: "Á quân / Lời chia tay", memory: "Kỳ World Cup cuối cùng đẫm nước mắt. Dù gục ngã 0-1 trước Tây Ban Nha sau 120 phút rực lửa, anh vẫn để lại một di sản vĩnh cửu. Trận chiến cuối cùng của số 10 vĩ đại trên sân chơi thế giới.", image: "/2026.png" }
+const TIMELINE_DATA = [
+  { year: "1997", title: "Newell's Old Boys", desc: "Bắt đầu hành trình bóng đá tại đội bóng quê hương Rosario." },
+  { year: "2000", title: "Cập bến Barcelona", desc: "Ký hợp đồng trên chiếc khăn ăn lịch sử, gia nhập học viện La Masia." },
+  { year: "2004", title: "Ra mắt đội một", desc: "Chính thức trình làng thế giới bóng đá chuyên nghiệp trong màu áo Blaugrana." },
+  { year: "2006", title: "Cúp Tai Voi & World Cup", desc: "Giành chức vô địch Champions League đầu tiên và có màn ra mắt kỳ World Cup tại Đức." },
+  { year: "2009", title: "Quả bóng vàng đầu tiên", desc: "Đạt đỉnh cao phong độ với cú ăn 6 vĩ đại cùng triều đại Pep Guardiola." },
+  { year: "2012", title: "Kỷ lục 91 bàn thắng", desc: "Phá vỡ mọi giới hạn vật lý và logic của bóng đá trong một năm dương lịch." },
+  { year: "2015", title: "Vô địch UCL lần thứ 5", desc: "Mảnh ghép của tam tấu MSN huyền thoại, giành cú ăn 3 thứ hai trong lịch sử CLB." },
+  { year: "2021", title: "Vô địch Copa America", desc: "Chấm dứt cơn khát danh hiệu cùng ĐTQG Argentina sau nhiều năm cay đắng." },
+  { year: "2022", title: "World Cup Champion & Finalissima", desc: "Đoạt cúp Liên lục địa và lên đỉnh thế giới tại Qatar, hoàn tất bộ sưu tập vĩ đại nhất." },
+  { year: "2024", title: "Bảo vệ ngôi vương Copa", desc: "Tiếp tục thống trị Nam Mỹ với chức vô địch Copa America lần thứ hai liên tiếp." },
+  { year: "2026", title: "Á quân World Cup (The Last Dance)", desc: "Trận chung kết World Cup thứ hai liên tiếp ở tuổi 39. Lời chia tay vĩ đại của nhà vua." }
+];
+
+const WORLD_CUP_BOOTS: ModalData[] = [
+  { id: 1, year: "2006", name: "Adidas +F50.6 Tunit", goals: "1 Bàn thắng", memory: "Kỳ World Cup đầu tiên tại Đức. Chàng trai 19 tuổi ra mắt và ghi bàn ngay lập tức vào lưới Serbia & Montenegro.", image: "/2006.png" },
+  { id: 2, year: "2010", name: "F50 Adizero Chameleon", goals: "0 Bàn thắng", memory: "Một kỳ World Cup đầy nỗ lực tại Nam Phi dưới sự dẫn dắt của huyền thoại Maradona nhưng lại vô duyên trước khung thành.", image: "/2010.png" },
+  { id: 3, year: "2014", name: "Adizero F50 Battle Pack", goals: "4 Bàn thắng", memory: "Nỗi đau Maracana. Kéo Argentina vào đến chung kết, đoạt Quả Bóng Vàng giải đấu nhưng gục ngã đau đớn ở hiệp phụ.", image: "/2014.png" },
+  { id: 4, year: "2018", name: "Adidas Nemeziz 18.1", goals: "1 Bàn thắng", memory: "Kỳ World Cup hỗn loạn tại Nga. Dấu ấn là pha hãm bóng tinh tế và ghi bàn tuyệt đỉnh vào lưới Nigeria.", image: "/2018.png" },
+  { id: 5, year: "2022", name: "X Speedportal Leyenda", goals: "7 Bàn thắng", memory: "Vinh quang trọn vẹn. Rực sáng tại Qatar để mang về ngôi sao thứ 3 cho Argentina. Đỉnh cao tuyệt đối của bóng đá.", image: "/2022.png" },
+  { id: 6, year: "2026", name: "F50 Elite Messi 2026", goals: "Á quân / Lời chia tay", memory: "Kỳ World Cup cuối cùng. Dù gục ngã trước Tây Ban Nha sau 120 phút rực lửa, anh vẫn để lại một di sản vĩnh cửu.", image: "/2026.png" }
 ];
 
 const TROPHY_CATEGORIES = [
-  { title: "Danh Hiệu Cá Nhân (929 goals and 424 assist)", items: [{ name: "Quả Bóng Vàng", count: "8x", img: "/26.png", year: "2009 - 2023", story: "Kỷ lục vô tiền khoáng hậu. Dù luôn có những ý kiến trái chiều tranh luận về tính công bằng ở một vài năm (như 2010 hay 2021), nhưng nhìn lại cả một kỷ nguyên gần 2 thập kỷ, sự thống trị của Messi là không thể phủ nhận. 8 Quả bóng vàng là minh chứng tuyệt đối cho sự bền bỉ, ma thuật và đẳng cấp vượt thời gian của một GOAT thực thụ." }, { name: "Giày Vàng Châu Âu", count: "6x", img: "/28.png", year: "2010 - 2019", story: "6 lần trở thành chân sút xuất sắc nhất cựu lục địa. Nổi bật nhất là mùa giải kỷ lục 2011-2012 khi anh ghi tới 50 bàn thắng chỉ tính riêng tại La Liga - một con số thách thức mọi giới hạn của bóng đá hiện đại." }, { name: "FIFA The Best", count: "3x", img: "/27.png", year: "2019, 2022, 2023", story: "Sự công nhận chính thức từ Liên đoàn Bóng đá Thế giới (FIFA). Những giải thưởng này củng cố thêm vị thế độc tôn của Messi, đặc biệt là giải thưởng năm 2022 sau màn trình diễn siêu việt tại kỳ World Cup ở Qatar." }, { name: "Quả Bóng Vàng World Cup", count: "2x", img: "/29.png", year: "2014, 2022", story: "Cầu thủ duy nhất trong lịch sử giành 2 Quả bóng vàng World Cup. Một danh hiệu đến trong những giọt nước mắt nuối tiếc tại Brazil 2014, và danh hiệu còn lại là đỉnh cao viên mãn trong đêm Lusail rực sáng tại Qatar 2022." }]},
-  { title: "Cấp Đội Tuyển Quốc Gia", items: [{ name: "FIFA World Cup", count: "", img: "/15.png", year: "2022", story: "Vinh quang vĩ đại nhất. Chức vô địch tại Qatar sau trận chung kết điên rồ trước tuyển Pháp đã chính thức hoàn tất bộ sưu tập đồ sộ của El Pulga. Khoảnh khắc anh nâng cao chiếc cúp vàng đã chấm dứt mọi cuộc tranh luận, đưa anh lên ngôi đền thiêng liêng nhất của lịch sử túc cầu." }, { name: "Copa América", count: "2x", img: "/16.png", year: "2021, 2024", story: "Cởi bỏ áp lực ngàn cân. Sau những thất bại cay đắng năm 2015, 2016 khiến anh từng tuyên bố giã từ đội tuyển, Messi đã trở lại mạnh mẽ. Chức vô địch tại thánh địa Maracanã (2021) là bước ngoặt thay đổi hoàn toàn vận mệnh, làm tiền đề để anh tiếp tục bảo vệ ngôi vương vào năm 2024." }, { name: "Siêu Cúp Liên Lục Địa", count: "", img: "/18.png", year: "2022", story: "Màn trình diễn siêu hạng tại thánh địa Wembley. Messi kiến tạo 2 bàn, dẫn dắt lối chơi giúp Argentina đè bẹp nhà ĐKVĐ Châu Âu - tuyển Ý với tỷ số thuyết phục 3-0." }, { name: "HCV Olympic", count: "", img: "/17.png", year: "2008", story: "Danh hiệu quốc tế lớn đầu tiên của chàng trai trẻ Messi cùng thế hệ vàng U23 Argentina tại Bắc Kinh. Dù bị Barcelona ngăn cản ban đầu, sự can thiệp của Pep Guardiola đã giúp anh được tham dự và mang vàng về cho tổ quốc." }]},
-  { title: "Cấp Câu Lạc Bộ", items: [{ name: "UEFA Champions League", count: "4x", img: "/20.png", year: "2006 - 2015", story: "Những đêm châu Âu huyền diệu cùng Barcelona. Từ cú đánh đầu kinh điển ở Rome (2009) đến cú sút xa cháy lưới tại Wembley (2011), Messi luôn là cơn ác mộng gieo rắc nỗi sợ hãi cho phần còn lại của bóng đá Châu Âu." }, { name: "La Liga", count: "10x", img: "/19.png", year: "2005 - 2019", story: "Sự thống trị tuyệt đối tại Tây Ban Nha. Dưới triều đại của Messi, Barcelona từ một kẻ bám đuổi đã thiết lập sự thống trị kéo dài hơn một thập kỷ tại giải quốc nội, vượt mặt đại kình địch Real Madrid hết lần này đến lần khác." }, { name: "Copa del Rey", count: "7x", img: "/21.png", year: "7 chức vô địch", story: "Kỷ lục gia của Cúp Nhà vua. Giải đấu chứng kiến những pha solo ghi bàn không tưởng của anh, tiêu biểu là cú slalom kinh điển loại bỏ 4 cầu thủ Athletic Bilbao vào năm 2015." }, { name: "Siêu Cúp Châu Âu & Club WC", count: "6x", img: "/25.png", year: "3 Siêu cúp Châu Âu, 3 Club World Cup", story: "Khẳng định sức mạnh tuyệt đối của Barcelona trên bình diện thế giới. Messi luôn biết cách lên tiếng ở những trận chung kết, dập tắt hy vọng của các nhà vô địch từ Nam Mỹ đến Châu Á." }, { name: "Ligue 1 (PSG)", count: "2x", img: "/22.png", year: "2022, 2023", story: "Khoảng thời gian 2 năm xa nhà tại Paris Saint-Germain. Dù gặp nhiều thăng trầm và sự khắc nghiệt từ cổ động viên, Messi vẫn kịp bổ sung vào bộ sưu tập của mình 2 chức vô địch nước Pháp." }, { name: "Leagues Cup", count: "", img: "/23.png", year: "2023", story: "Hiệu ứng Messi vĩ đại tại đất Mỹ. Ngay khi cập bến, anh đã gồng gánh một Inter Miami đang đứng chót bảng giành lấy chức vô địch đầu tiên trong lịch sử câu lạc bộ với chuỗi trận ghi bàn khó tin." }, { name: "MLS Cup", count: "2x", img: "/24.png", year: "Kỷ nguyên Inter Miami", story: "Chinh phục nước Mỹ. Từ một đội bóng non trẻ, phép thuật của Messi đã nâng tầm Inter Miami, biến họ thành thế lực số một để càn quét những danh hiệu cao quý nhất của bóng đá xứ cờ hoa." }]}
+  { title: "Danh Hiệu Cá Nhân", items: [{ name: "Quả Bóng Vàng", count: "8x", img: "/26.png", year: "2009 - 2023", story: "Kỷ lục vô tiền khoáng hậu. 8 Quả bóng vàng là minh chứng tuyệt đối cho sự bền bỉ, ma thuật và đẳng cấp vượt thời gian của một GOAT thực thụ." }, { name: "Giày Vàng Châu Âu", count: "6x", img: "/28.png", year: "2010 - 2019", story: "6 lần trở thành chân sút xuất sắc nhất cựu lục địa." }, { name: "FIFA The Best", count: "3x", img: "/27.png", year: "2019, 2022, 2023", story: "Sự công nhận chính thức từ Liên đoàn Bóng đá Thế giới (FIFA)." }, { name: "QB Vàng World Cup", count: "2x", img: "/29.png", year: "2014, 2022", story: "Cầu thủ duy nhất trong lịch sử giành 2 Quả bóng vàng World Cup." }]},
+  { title: "Cấp Đội Tuyển Quốc Gia", items: [{ name: "FIFA World Cup", count: "1x", img: "/15.png", year: "2022", story: "Vinh quang vĩ đại nhất tại Qatar sau trận chung kết điên rồ trước tuyển Pháp." }, { name: "Copa América", count: "2x", img: "/16.png", year: "2021, 2024", story: "Chức vô địch tại thánh địa Maracanã cởi bỏ áp lực ngàn cân, và hành trình bảo vệ ngôi vương 2024." }, { name: "Finalissima", count: "1x", img: "/18.png", year: "2022", story: "Đè bẹp tuyển Ý 3-0 tại thánh địa Wembley." }, { name: "HCV Olympic", count: "1x", img: "/17.png", year: "2008", story: "Danh hiệu quốc tế lớn đầu tiên của chàng trai trẻ Messi tại Bắc Kinh." }]},
+  { title: "Cấp Câu Lạc Bộ", items: [{ name: "Champions League", count: "4x", img: "/20.png", year: "2006 - 2015", story: "Những đêm châu Âu huyền diệu cùng Barcelona." }, { name: "La Liga", count: "10x", img: "/19.png", year: "2005 - 2019", story: "Sự thống trị tuyệt đối tại bóng đá Tây Ban Nha." }, { name: "Copa del Rey", count: "7x", img: "/21.png", year: "7 chức vô địch", story: "Kỷ lục gia của Cúp Nhà vua Tây Ban Nha." }, { name: "Ligue 1", count: "2x", img: "/22.png", year: "2022, 2023", story: "Thống trị bóng đá nước Pháp cùng PSG." }]}
+];
+
+const STATS_DATA = [
+  { label: "BÀN THẮNG SỰ NGHIỆP", value: 930 },
+  { label: "KIẾN TẠO (Kỷ lục lịch sử)", value: 424 },
+  { label: "SỐ TRẬN ĐẤU CHÍNH THỨC", value: 1176 },
+  { label: "DANH HIỆU (Nhiều nhất lịch sử)", value: 49 }
 ];
 
 const ANATOMY_DATA = [
   { id: "head", label: "IQ BÓNG ĐÁ", top: "12%", left: "48%", content: "Bóng đá là một trò chơi trí tuệ, và Messi là bộ não vĩ đại nhất. Cậu ấy quét sân đấu như một radar." },
   { id: "heart", label: "TÌNH YÊU & TRUNG THÀNH", top: "34%", left: "57%", content: "Logo đội tuyển quốc gia và tình yêu bất diệt dành cho quê hương Argentina. Trái tim của một chiến binh." },
-  { id: "hand", label: "BÀN TAY VINH QUANG", top: "64%", left: "32%", content: "Bàn tay đã nâng cao 49 danh hiệu tập thể - Kỷ lục tuyệt đối của lịch sử bóng đá nhân loại, trong đó có cúp vàng World Cup." },
-  { id: "leg", label: "CHÂN TRÁI MA THUẬT", top: "85%", left: "55%", content: "Vũ khí chết chóc nhất bóng đá hiện đại. Ghi 91 bàn trong một năm dương lịch, vượt mọi giới hạn vật lý và logic." }
+  { id: "hand", label: "BÀN TAY VINH QUANG", top: "64%", left: "32%", content: "Bàn tay đã nâng cao 49 danh hiệu tập thể - Kỷ lục tuyệt đối của lịch sử bóng đá nhân loại." },
+  { id: "leg", label: "CHÂN TRÁI MA THUẬT", top: "85%", left: "55%", content: "Vũ khí chết chóc nhất bóng đá hiện đại. Vượt mọi giới hạn vật lý và logic." }
 ];
 
 const JERSEYS = [
-  { id: 1, name: "Newell's Old Boys", image: "/jersey1.png", message: "Gửi cậu bé Rosario năm ấy: Nơi đây anh đã thắp lên ngọn lửa của một vì tinh tú. Cảm ơn vì đã không từ bỏ trái bóng dù mang trong mình một thân hình nhỏ bé." },
-  { id: 2, name: "FC Barcelona", image: "/jersey2.png", message: "Camp Nou sẽ mãi gọi tên anh. Một di sản vĩ đại nhất lịch sử Blaugrana. Thanh xuân của hàng triệu Culer đã khép lại trọn vẹn nhờ có anh." },
-  { id: 3, name: "Argentina", image: "/jersey3.png", message: "Nước mắt, áp lực tột cùng và vinh quang tột đỉnh. Chiếc áo mang 3 ngôi sao này là phần thưởng xứng đáng nhất cho nỗ lực không ngừng nghỉ vì quê hương." },
-  { id: 4, name: "Inter Miami", image: "/jersey4.png", message: "Hoàng hôn rực rỡ trên đất Mỹ. Áp lực đã lùi lại phía sau, giờ là lúc tận hưởng niềm vui thuần khiết nhất của việc chơi bóng. Chúc anh hạnh phúc, Leo." }
+  { id: 1, name: "Newell's Old Boys", image: "/jersey1.png", message: "Gửi cậu bé Rosario năm ấy: Nơi đây anh đã thắp lên ngọn lửa của một vì tinh tú. Cảm ơn vì đã không từ bỏ." },
+  { id: 2, name: "FC Barcelona", image: "/jersey2.png", message: "Camp Nou sẽ mãi gọi tên anh. Một di sản vĩ đại nhất lịch sử Blaugrana. Thanh xuân của hàng triệu Culer." },
+  { id: 3, name: "Argentina", image: "/jersey3.png", message: "Nước mắt, áp lực tột cùng và vinh quang tột đỉnh. 3 ngôi sao này là phần thưởng xứng đáng nhất." },
+  { id: 4, name: "Inter Miami", image: "/jersey4.png", message: "Hoàng hôn rực rỡ trên đất Mỹ. Áp lực đã lùi lại phía sau, giờ là lúc tận hưởng niềm vui thuần khiết." }
 ];
 
-// Thêm Henry và Neymar, tổng 6 câu
 const LEGEND_QUOTES = [
   { quote: "Anh ấy là một cầu thủ kỳ diệu, một phép thuật. Chúng tôi đã chia sẻ sân khấu suốt 16 năm lịch sử.", author: "C. Ronaldo", img: "/ronaldo.png" },
   { quote: "Đừng cố miêu tả cậu ấy. Hãy cứ im lặng và xem cậu ấy thi đấu thôi. Cậu ấy không phải là một cầu thủ bình thường.", author: "Pep Guardiola", img: "/pep.png" },
   { quote: "Messi giống như một nhân vật PlayStation. Cậu ấy là một tác phẩm nghệ thuật vô giá.", author: "Arsène Wenger", img: "/wenger.png" },
-  { quote: "Tôi đã thấy người kế thừa vị trí của mình trong bóng đá. Cậu ấy là một thiên tài vượt qua mọi giới hạn.", author: "D. Maradona", img: "/maradona.png" },
-  { quote: "Đôi khi tôi tự hỏi liệu Messi có phải là con người hay không. Được chơi bóng cùng cậu ấy là một đặc ân.", author: "Thierry Henry", img: "/henry.png" },
+  { quote: "Tôi đã thấy người kế thừa vị trí của mình. Cậu ấy là một thiên tài vượt qua mọi giới hạn.", author: "D. Maradona", img: "/maradona.png" },
+  { quote: "Đôi khi tôi tự hỏi liệu Messi có phải là con người hay không. Được chơi bóng cùng anh ấy là một đặc ân.", author: "Thierry Henry", img: "/henry.png" },
   { quote: "Được sát cánh cùng Messi là trải nghiệm tuyệt vời. Trong tất cả những người tôi từng thấy, anh ấy là vĩ đại nhất.", author: "Neymar Jr", img: "/neymar.png" }
 ];
 
-export default function Home() {
-  const [activeModal, setActiveModal] = useState<any>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+// --- Custom Hooks ---
+const useMousePosition = () => {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
-  const [activeAnatomy, setActiveAnatomy] = useState<number | null>(null);
-  const [flippedJersey, setFlippedJersey] = useState<number | null>(null);
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPos({ x: e.clientX, y: e.clientY });
+      setParallax({
+        x: (e.clientX / window.innerWidth - 0.5) * 1.5,
+        y: (e.clientY / window.innerHeight - 0.5) * 1.5
+      });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
-  const [loading, setLoading] = useState(true);
-  const [count, setCount] = useState(0);
+  return { pos, parallax };
+};
 
-  // States tách biệt cho hiệu ứng
-  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
-  const [parallaxPos, setParallaxPos] = useState({ x: 0, y: 0 });
-  const [cursorVariant, setCursorVariant] = useState("default");
+const scrollToSection = (id: string) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+};
 
+// --- Sub-Components ---
+const Counter = ({ to }: { to: number }) => {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest).toLocaleString('vi-VN'));
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (inView) animate(count, to, { duration: 2.5, ease: "easeOut" });
+  }, [inView, count, to]);
+
+  return <motion.span ref={ref}>{rounded}</motion.span>;
+};
+
+const ScrollButton = ({ to, label, hoverProps }: { to: string, label: string, hoverProps: HoverProps }) => (
+  <button onClick={() => scrollToSection(to)} {...hoverProps} className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-slate-400 hover:text-sky-500 transition-colors cursor-none group z-30">
+    <span className="text-[10px] tracking-[0.2em] uppercase font-bold mb-1 opacity-0 group-hover:opacity-100 transition-opacity">{label}</span>
+    <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+  </button>
+);
+
+const SectionHeader = ({ tag, title, subtitle }: { tag: string, title: string, subtitle: string }) => (
+  <div className="text-center mb-16 relative z-10 px-6">
+    <span className="text-sky-500 font-black tracking-widest uppercase text-sm mb-2 block">{tag}</span>
+    <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-slate-800 mb-4">{title}</h3>
+    <p className="text-slate-500 max-w-2xl mx-auto font-medium text-lg">{subtitle}</p>
+  </div>
+);
+
+const TranslationToggle = ({ hoverProps }: { hoverProps: HoverProps }) => {
+  const [lang, setLang] = useState("vi");
+
+  useEffect(() => {
+    if (!document.getElementById("google-translate-script")) {
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      document.body.appendChild(script);
+
+      (window as any).googleTranslateElementInit = () => {
+        new (window as any).google.translate.TranslateElement({ pageLanguage: 'vi', autoDisplay: false }, 'google_translate_element');
+      };
+    }
+    setLang(document.cookie.includes('googtrans=/vi/en') ? 'en' : 'vi');
+  }, []);
+
+  const switchLanguage = (targetLang: string) => {
+    if (targetLang === 'en') {
+      document.cookie = `googtrans=/vi/en; path=/`;
+    } else {
+      document.cookie = `googtrans=/vi/vi; path=/`;
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    }
+    window.location.reload();
+  };
+
+  return (
+    <div className="fixed top-24 right-6 z-[100] flex items-center bg-white/90 backdrop-blur-md rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-slate-200/50 overflow-hidden cursor-none">
+      <div id="google_translate_element" className="hidden"></div>
+      <button {...hoverProps} onClick={() => switchLanguage('vi')} className={`px-4 py-2 text-xs font-black tracking-widest transition-colors ${lang === 'vi' ? 'bg-sky-500 text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-sky-500'}`}>VI</button>
+      <button {...hoverProps} onClick={() => switchLanguage('en')} className={`px-4 py-2 text-xs font-black tracking-widest transition-colors ${lang === 'en' ? 'bg-sky-500 text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-sky-500'}`}>EN</button>
+    </div>
+  );
+};
+
+const AudioPlayer = ({ hoverProps }: { hoverProps: HoverProps }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const toggleAudio = () => {
+    isPlaying ? audioRef.current?.pause() : audioRef.current?.play();
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <>
+      <audio ref={audioRef} src="/stadium.mp3" loop preload="auto" />
+      <div {...hoverProps} onClick={toggleAudio} className="fixed bottom-8 right-8 z-[100] w-12 h-12 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white cursor-none border border-white/20 shadow-lg transition-transform hover:scale-110">
+        {isPlaying ? 
+          <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z"/><path d="M15.932 7.757a.75.75 0 011.061 0 6 6 0 010 8.486.75.75 0 01-1.06-1.061 4.5 4.5 0 000-6.364.75.75 0 010-1.06z"/></svg> 
+          : <svg className="w-5 h-5 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM17.78 9.22a.75.75 0 10-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 001.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 101.06-1.06L20.56 12l1.72-1.72a.75.75 0 00-1.06-1.06l-1.72 1.72-1.72-1.72z"/></svg>
+        }
+      </div>
+    </>
+  );
+};
+
+const CustomCursor = ({ pos, variant }: { pos: { x: number, y: number }, variant: string }) => (
+  <motion.div 
+    className="fixed top-0 left-0 pointer-events-none z-[10000]" 
+    variants={{
+      default: { x: pos.x - 6, y: pos.y - 6, height: 12, width: 12, backgroundColor: "#0ea5e9", borderRadius: "50%", opacity: 1 },
+      hover: { x: pos.x - 20, y: pos.y - 20, height: 40, width: 40, backgroundColor: "rgba(14, 165, 233, 0.3)", borderRadius: "50%", border: "1px solid #0ea5e9", opacity: 1 }
+    }} 
+    animate={variant} 
+    transition={{ type: "tween", ease: "backOut", duration: 0.15 }} 
+  />
+);
+
+// --- Main Page Component ---
+export default function Home() {
+  const [activeModal, setActiveModal] = useState<ModalData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [count, setCount] = useState(0);
+  
+  // Sửa biến destructured từ 'parallaxPos' thành 'parallax' để đồng nhất
+  const { pos, parallax } = useMousePosition();
+  const [cursorVariant, setCursorVariant] = useState("default");
+
+  const hoverProps = { onMouseEnter: () => setCursorVariant("hover"), onMouseLeave: () => setCursorVariant("default") };
+
+  // Preloader Logic
   useEffect(() => {
     if (count < 10) {
       const timer = setTimeout(() => setCount(prev => prev + 1), 200);
@@ -92,294 +265,146 @@ export default function Home() {
     }
   }, [count]);
 
-  // Xử lý tọa độ chuột cho Cursor và Parallax
+  // Lock scroll
   useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      setCursorPos({ x: e.clientX, y: e.clientY });
-      
-      const px = (e.clientX / window.innerWidth - 0.5) * 1.5;
-      const py = (e.clientY / window.innerHeight - 0.5) * 1.5;
-      setParallaxPos({ x: px, y: py });
-    };
-    window.addEventListener("mousemove", moveCursor);
-    return () => window.removeEventListener("mousemove", moveCursor);
-  }, []);
-
-  useEffect(() => {
-    if (activeModal || loading) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'unset';
+    document.body.style.overflow = (activeModal || loading) ? 'hidden' : 'unset';
   }, [activeModal, loading]);
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const toggleAudio = () => {
-    if (isPlaying) {
-      audioRef.current?.pause();
-    } else {
-      audioRef.current?.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const openStory = (storyKey: keyof typeof STORY_DATA) => {
-    setActiveModal(STORY_DATA[storyKey]);
-    setCurrentImageIndex(0);
-  };
-
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (activeModal && activeModal.images) {
-      setCurrentImageIndex((prev) => (prev + 1) % activeModal.images.length);
-    }
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (activeModal && activeModal.images) {
-      setCurrentImageIndex((prev) => (prev - 1 + activeModal.images.length) % activeModal.images.length);
-    }
-  };
-
-  const handleMouseEnter = () => setCursorVariant("hover");
-  const handleMouseLeave = () => setCursorVariant("default");
-
-  // Thiết kế Custom Cursor siêu hiện đại (Không có chữ)
-  const cursorVariants = {
-    default: {
-      x: cursorPos.x - 6,
-      y: cursorPos.y - 6,
-      height: 12,
-      width: 12,
-      backgroundColor: "#0ea5e9", // Xanh sky-500
-      borderRadius: "50%",
-      opacity: 1,
-    },
-    hover: {
-      x: cursorPos.x - 20,
-      y: cursorPos.y - 20,
-      height: 40,
-      width: 40,
-      backgroundColor: "rgba(14, 165, 233, 0.3)", // Vòng tròn xanh mờ
-      borderRadius: "50%",
-      border: "1px solid #0ea5e9",
-      opacity: 1,
-    }
-  };
+  const [activeAnatomy, setActiveAnatomy] = useState<number | null>(null);
+  const [flippedJersey, setFlippedJersey] = useState<number | null>(null);
 
   return (
     <main className="min-h-screen bg-[#F8F9FA] text-slate-700 font-sans selection:bg-sky-500 selection:text-white overflow-x-hidden cursor-none">
       
-      {/* ================= THẺ AUDIO CHẠY NGẦM ================= */}
-      <audio ref={audioRef} src="/stadium.mp3" loop preload="auto" />
+      <TranslationToggle hoverProps={hoverProps} />
+      <AudioPlayer hoverProps={hoverProps} />
+      <CustomCursor pos={pos} variant={cursorVariant} />
 
-      {/* ================= NÚT BẬT TẮT ÂM THANH ================= */}
-      <div 
-        className="fixed bottom-8 right-8 z-[100] w-12 h-12 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white cursor-none border border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-transform hover:scale-110"
-        onClick={toggleAudio}
-        onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}
-      >
-        {isPlaying ? (
-          <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z"/><path d="M15.932 7.757a.75.75 0 011.061 0 6 6 0 010 8.486.75.75 0 01-1.06-1.061 4.5 4.5 0 000-6.364.75.75 0 010-1.06z"/></svg>
-        ) : (
-          <svg className="w-5 h-5 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM17.78 9.22a.75.75 0 10-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 001.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 101.06-1.06L20.56 12l1.72-1.72a.75.75 0 00-1.06-1.06l-1.72 1.72-1.72-1.72z"/></svg>
-        )}
-      </div>
-
-      {/* ================= MAGIC CUSTOM CURSOR (CHẤM XANH) ================= */}
-      <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[10000]"
-        variants={cursorVariants}
-        animate={cursorVariant}
-        transition={{ type: "tween", ease: "backOut", duration: 0.15 }}
-      />
-
-      {/* ================= CINEMATIC PRELOADER ================= */}
+      {/* Preloader */}
       <AnimatePresence>
         {loading && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            className="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center cursor-wait"
-          >
+          <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }} transition={{ duration: 1.2, ease: "easeInOut" }} className="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center cursor-wait">
             <div className="text-center">
-              <motion.h1 
-                className={`text-[8rem] md:text-[15rem] font-black transition-all duration-700 ${count === 10 ? "text-sky-500 drop-shadow-[0_0_50px_rgba(14,165,233,0.8)] scale-110" : "text-slate-800"}`}
-              >
-                {count < 10 ? `0${count}` : count}
-              </motion.h1>
-              <p className="text-slate-500 tracking-[0.5em] uppercase text-sm mt-4 font-bold">
-                {count === 10 ? "Recreating A Glorious Era" : "Loading Legendary Archive..."}
-              </p>
+              <motion.h1 className={`text-[8rem] md:text-[15rem] font-black transition-all duration-700 ${count === 10 ? "text-sky-500 drop-shadow-[0_0_50px_rgba(14,165,233,0.8)] scale-110" : "text-slate-800"}`}>{count < 10 ? `0${count}` : count}</motion.h1>
+              <p className="text-slate-500 tracking-[0.5em] uppercase text-sm mt-4 font-bold">{count === 10 ? "Entering The GOAT Era" : "Initializing Legendary Archive..."}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ================= NỘI DUNG CHÍNH TRANG WEB ================= */}
+      {/* Navigation */}
       <nav id="top" className="flex justify-between items-center px-10 py-6 border-b border-slate-200/60 backdrop-blur-2xl sticky top-0 z-50 bg-white/50 shadow-sm">
-        <h1 className="text-3xl md:text-4xl font-black tracking-[0.15em] text-slate-800">
-          EL PULGA<span className="text-sky-500">.</span>
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-black tracking-[0.15em] text-slate-800">EL PULGA<span className="text-sky-500">.</span></h1>
         <div className="hidden md:flex items-center space-x-12 text-base md:text-lg font-black tracking-widest uppercase text-slate-700">
-          <button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => scrollToSection('inspiration')} className="hover:text-sky-500 transition uppercase tracking-widest font-black">01. Cảm Hứng</button>
-          <button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => scrollToSection('arsenal')} className="hover:text-sky-500 transition uppercase tracking-widest font-black">02. Sân Cỏ</button>
-          <button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => scrollToSection('honors')} className="hover:text-sky-500 transition uppercase tracking-widest font-black">03. Vinh Danh</button>
-          <button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => scrollToSection('epilogue')} className="hover:text-sky-500 transition uppercase tracking-widest font-black">04. Lời Kết</button>
+          <button {...hoverProps} onClick={() => scrollToSection('journey')} className="hover:text-sky-500 transition cursor-none">01. Hành Trình</button>
+          <button {...hoverProps} onClick={() => scrollToSection('footprint')} className="hover:text-sky-500 transition cursor-none">02. Dấu Chân</button>
+          <button {...hoverProps} onClick={() => scrollToSection('legacy')} className="hover:text-sky-500 transition cursor-none">03. Di Sản</button>
+          <button {...hoverProps} onClick={() => scrollToSection('man')} className="hover:text-sky-500 transition cursor-none">04. Con Người</button>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
+      {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden">
-        <motion.div 
-          initial={{ scale: 1.05, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute inset-0 z-0 bg-black"
-        >
+        <motion.div initial={{ scale: 1.05, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.5, ease: "easeOut" }} className="absolute inset-0 z-0 bg-black">
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#F8FAFC] z-10"></div>
-          <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80 mix-blend-luminosity" poster="/2.jpg">
-            <source src="/hero.mp4" type="video/mp4" />
-          </video>
+          <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80 mix-blend-luminosity" poster="/2.jpg"><source src="/hero.mp4" type="video/mp4" /></video>
         </motion.div>
-
         <div className="relative z-20 flex flex-col items-center mt-[-4rem]">
-          <motion.h2 
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.8, duration: 0.8 }} 
-            className="font-black tracking-tighter uppercase leading-[0.9] drop-shadow-2xl transition-transform duration-500 flex flex-col items-center"
-          >
-            <span className="text-3xl md:text-[3.5rem] text-white mb-2 md:mb-4 [-webkit-text-stroke:0px] tracking-widest drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
-              THE GREATEST OF ALL TIME
-            </span>
-            <span className="text-[5rem] md:text-[10rem] text-transparent [-webkit-text-stroke:2px_#ffffff] drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
-              LEO MESSI
-            </span>
+          <motion.h2 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.8, duration: 0.8 }} className="font-black tracking-tighter uppercase leading-[0.9] drop-shadow-2xl transition-transform duration-500 flex flex-col items-center">
+            <span className="text-3xl md:text-[3.5rem] text-white mb-2 md:mb-4 tracking-widest drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">THE GREATEST OF ALL TIME</span>
+            <span className="text-[5rem] md:text-[10rem] text-transparent [-webkit-text-stroke:2px_#ffffff] drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">LEO MESSI</span>
           </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 0.8 }}
-            className="text-white text-lg max-w-2xl mb-8 font-medium mt-10 bg-black/40 px-6 py-4 rounded-xl backdrop-blur-sm border border-white/10 shadow-lg"
-          >
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 0.8 }} className="text-white text-lg max-w-2xl mb-8 font-medium mt-10 bg-black/40 px-6 py-4 rounded-xl backdrop-blur-sm border border-white/10 shadow-lg">
             Không gian lưu trữ di sản của một huyền thoại sống. Nơi tôn vinh từng khoảnh khắc ma thuật, những bước chạy lịch sử và hành trình vĩ đại của GOAT - Lionel Messi qua góc nhìn và tâm huyết của MinhTri.
           </motion.p>
         </div>
-
-        {/* NÚT SCROLL XUỐNG PAGE 01 */}
-        <motion.button 
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }}
-          onClick={() => scrollToSection('inspiration')}
-          onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}
-          className="absolute bottom-10 z-30 flex flex-col items-center justify-center text-white/70 hover:text-white transition-colors animate-bounce cursor-none"
-        >
-          <span className="text-xs tracking-[0.2em] uppercase font-bold mb-2">Page 01</span>
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-        </motion.button>
+        <ScrollButton to="journey" label="Page 01" hoverProps={hoverProps} />
       </section>
 
-      {/* TRẠM 1: NGUỒN CẢM HỨNG */}
-      <section id="inspiration" className="max-w-7xl mx-auto px-6 py-32 relative z-10 bg-gradient-to-br from-slate-50 via-white to-slate-100 rounded-3xl mt-[-2rem] mb-12 shadow-sm border border-slate-200/60 pb-40">
-        <div className="mb-12">
-          <span className="text-sky-500 font-black tracking-widest uppercase text-sm mb-2 block">Page 01</span>
-          <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-800">Nguồn Cảm Hứng</h3>
-          <p className="text-slate-600 mt-4 max-w-2xl font-medium">Hành trình vươn lên không bao giờ bỏ cuộc của Lionel Messi.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <motion.div whileHover={{ scale: 1.02 }} onClick={() => openStory("rosario")} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="group bg-slate-900 rounded-3xl border border-slate-200/50 hover:border-sky-300 transition-all shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden h-[300px] flex flex-col justify-end">
-            <div className="absolute inset-0 bg-[url('/rosario1.png')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-            <div className="relative z-10 p-8 pointer-events-none">
-              <span className="text-sky-400 text-sm font-black tracking-widest uppercase mb-1 block">Phần 01</span>
-              <h4 className="text-3xl font-black text-white mb-2">ROSARIO</h4>
-              <p className="text-slate-200 font-medium text-sm">Hành trình khởi nguồn ↗</p>
+      {/* Page 01: The Journey */}
+      <section id="journey" className="relative w-full bg-white pb-32">
+        {STORY_CHAPTERS.map((chapter, index) => (
+          <div key={chapter.id} className="pt-32">
+            <SectionHeader tag={`Chương 0${index + 1}`} title={chapter.chapterTitle.split("—")[1].trim()} subtitle="" />
+            <div className="max-w-7xl mx-auto px-6 mt-[-40px]">
+              {chapter.parts.map((part, idx) => (
+                <div key={idx} className={`flex flex-col md:flex-row items-center gap-12 md:gap-24 mb-32 last:mb-0 ${idx % 2 !== 0 ? 'md:flex-row-reverse' : ''}`}>
+                  <motion.div initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} viewport={{ once: true, amount: 0.3 }} className="w-full md:w-1/2">
+                    <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] group">
+                      <img src={part.img} alt={part.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-500"></div>
+                    </div>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, x: idx % 2 === 0 ? 50 : -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} viewport={{ once: true, amount: 0.3 }} className="w-full md:w-1/2 text-left">
+                    <h4 className="text-3xl md:text-4xl font-black text-slate-800 mb-6 relative">
+                      <span className="absolute -left-6 top-2 w-2 h-8 bg-sky-500 rounded-full"></span>{part.title}
+                    </h4>
+                    <p className="text-lg md:text-xl text-slate-600 leading-relaxed font-medium">{part.content}</p>
+                  </motion.div>
+                </div>
+              ))}
             </div>
-          </motion.div>
-
-          <motion.div whileHover={{ scale: 1.02 }} onClick={() => openStory("barcelona")} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="group bg-slate-900 rounded-3xl border border-slate-200/50 hover:border-sky-300 transition-all shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden h-[300px] flex flex-col justify-end">
-            <div className="absolute inset-0 bg-[url('/lamasia1.png')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-            <div className="relative z-10 p-8 pointer-events-none">
-              <span className="text-sky-400 text-sm font-black tracking-widest uppercase mb-1 block">Phần 02</span>
-              <h4 className="text-3xl font-black text-white mb-2">BARCELONA</h4>
-              <p className="text-slate-200 font-medium text-sm">La Masia → Barça → Huyền thoại ↗</p>
-            </div>
-          </motion.div>
-
-          <motion.div whileHover={{ scale: 1.02 }} onClick={() => openStory("argentina")} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="group bg-slate-900 rounded-3xl border border-slate-200/50 hover:border-sky-300 transition-all shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden h-[300px] flex flex-col justify-end">
-            <div className="absolute inset-0 bg-[url('/7.png')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-            <div className="relative z-10 p-8 pointer-events-none">
-              <span className="text-sky-400 text-sm font-black tracking-widest uppercase mb-1 block">Phần 03</span>
-              <h4 className="text-3xl font-black text-white mb-2">ARGENTINA</h4>
-              <p className="text-slate-200 font-medium text-sm">Những giọt nước mắt cùng đội tuyển ↗</p>
-            </div>
-          </motion.div>
-
-          <motion.div whileHover={{ scale: 1.02 }} onClick={() => openStory("thedream")} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="group bg-slate-900 rounded-3xl border border-slate-200/50 hover:border-sky-300 transition-all shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden h-[300px] flex flex-col justify-end">
-            <div className="absolute inset-0 bg-[url('/10.png')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-            <div className="relative z-10 p-8 pointer-events-none">
-              <span className="text-sky-400 text-sm font-black tracking-widest uppercase mb-1 block">Phần 04</span>
-              <h4 className="text-3xl font-black text-white mb-2">THE DREAM</h4>
-              <p className="text-slate-200 font-medium text-sm">Copa América 2021 → World Cup 2026 ↗</p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* NÚT SCROLL XUỐNG PAGE 02 */}
-        <button onClick={() => scrollToSection('arsenal')} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-slate-400 hover:text-sky-500 transition-colors cursor-none group">
-          <span className="text-[10px] tracking-[0.2em] uppercase font-bold mb-1 opacity-0 group-hover:opacity-100 transition-opacity">Page 02</span>
-          <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-        </button>
-      </section>
-
-      {/* TRẠM 2: DẤU CHÂN LỊCH SỬ */}
-      <section id="arsenal" className="relative py-32 bg-gradient-to-tr from-slate-200 via-slate-50 to-slate-200 border-y border-slate-300/40 pb-48">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="mb-12">
-            <span className="text-sky-500 font-black tracking-widest uppercase text-sm mb-2 block">Page 02</span>
-            <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-800">Dấu Chân Lịch Sử</h3>
-            <p className="text-slate-600 mt-4 max-w-2xl font-medium">6 kỳ World Cup, 6 đôi giày chứng kiến những nốt thăng trầm trong sự nghiệp vĩ đại.</p>
+            {index !== STORY_CHAPTERS.length - 1 && <div className="w-full max-w-4xl mx-auto h-[1px] bg-gradient-to-r from-transparent via-slate-300 to-transparent mt-32"></div>}
           </div>
+        ))}
+        <div className="flex items-center justify-center mt-32 relative"><ScrollButton to="footprint" label="Page 02" hoverProps={hoverProps} /></div>
+      </section>
+
+      {/* Page 02: The Footprint */}
+      <section id="footprint" className="relative py-32 bg-[#F8F9FA] border-t border-slate-200 overflow-hidden">
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-full text-center pointer-events-none opacity-[0.03] z-0 overflow-hidden select-none">
+          <h2 className="text-[15rem] md:text-[25rem] font-black text-slate-900 tracking-tighter leading-none">HISTORY</h2>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 mb-40 relative z-10">
+          <SectionHeader tag="Page 02" title="The Career Timeline" subtitle="Toàn cảnh những cột mốc định hình nên vị vua của môn thể thao vĩ đại nhất." />
+          <div className="relative max-w-4xl mx-auto">
+            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-300 via-blue-500 to-indigo-600 transform md:-translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.5)]"></div>
+            {TIMELINE_DATA.map((item, idx) => (
+              <div key={idx} className={`relative flex items-center justify-between mb-16 w-full ${idx % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                <div className="hidden md:block w-[45%]"></div>
+                <div className="absolute left-6 md:left-1/2 w-6 h-6 bg-sky-500 rounded-full border-4 border-white shadow-[0_0_20px_rgba(14,165,233,0.8)] transform -translate-x-[11px] md:-translate-x-1/2 z-10"></div>
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} viewport={{ once: true, amount: 0.5 }} className="w-full pl-16 md:pl-0 md:w-[45%]">
+                  <div {...hoverProps} className={`p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-slate-200 hover:border-sky-400 hover:shadow-[0_20px_50px_rgba(14,165,233,0.15)] transition-all duration-300 cursor-none ${idx % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
+                    <span className="text-sky-500 font-black text-4xl tracking-tighter block mb-2">{item.year}</span>
+                    <h4 className="text-2xl font-bold text-slate-800 mb-3">{item.title}</h4>
+                    <p className="text-slate-500 text-base leading-relaxed">{item.desc}</p>
+                  </div>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10 pb-32">
+          <SectionHeader tag="" title="The World Cup Archive" subtitle="6 kỳ World Cup, 6 đôi giày chứng kiến những nốt thăng trầm." />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {WORLD_CUP_BOOTS.map((boot) => (
-              <motion.div key={boot.id} whileHover={{ y: -10 }} onClick={() => setActiveModal(boot)} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="group bg-white p-6 rounded-3xl border border-slate-200/80 hover:border-sky-400 hover:shadow-[0_15px_40px_rgba(56,189,248,0.15)] transition-all duration-300 shadow-md">
-                <div className="w-full h-56 rounded-2xl mb-6 flex items-center justify-center overflow-hidden relative shadow-inner bg-gradient-to-b from-slate-100 to-slate-200">
+              <motion.div key={boot.id} whileHover={{ y: -10 }} onClick={() => setActiveModal(boot)} {...hoverProps} className="group bg-white p-6 rounded-3xl border border-slate-200/80 hover:border-sky-400 hover:shadow-[0_15px_40px_rgba(56,189,248,0.15)] transition-all duration-300 shadow-lg cursor-none">
+                <div className="w-full h-64 rounded-2xl mb-6 flex items-center justify-center overflow-hidden relative shadow-inner bg-gradient-to-b from-slate-100 to-slate-200">
                   <img src={boot.image} alt={boot.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-[-2deg] transition-transform duration-700 ease-out mix-blend-darken" />
                   <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/10 to-transparent opacity-90"></div>
-                  <span className="absolute bottom-4 left-5 text-slate-800 font-black text-4xl tracking-tighter drop-shadow-sm opacity-90">{boot.year}</span>
+                  <span className="absolute bottom-4 left-5 text-slate-800 font-black text-5xl tracking-tighter drop-shadow-sm opacity-90">{boot.year}</span>
                 </div>
-                <h4 className="text-xl font-bold text-slate-800 mb-1 pointer-events-none">{boot.name}</h4>
-                <p className="text-sky-600 text-sm font-bold mb-3 pointer-events-none">{boot.goals}</p>
-                <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed pointer-events-none">{boot.memory}</p>
+                <h4 className="text-2xl font-bold text-slate-800 mb-1 pointer-events-none">{boot.name}</h4>
+                <p className="text-sky-600 text-sm font-bold mb-4 pointer-events-none">{boot.goals}</p>
+                <p className="text-slate-600 text-base line-clamp-3 leading-relaxed pointer-events-none">{boot.memory}</p>
               </motion.div>
             ))}
           </div>
         </div>
-
-        {/* NÚT SCROLL XUỐNG PAGE 03 */}
-        <button onClick={() => scrollToSection('honors')} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-slate-400 hover:text-sky-500 transition-colors cursor-none group">
-          <span className="text-[10px] tracking-[0.2em] uppercase font-bold mb-1 opacity-0 group-hover:opacity-100 transition-opacity">Page 03</span>
-          <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-        </button>
+        <ScrollButton to="legacy" label="Page 03" hoverProps={hoverProps} />
       </section>
 
-      {/* TRẠM 3: PHÒNG TRUYỀN THỐNG */}
-      <section id="honors" className="bg-gradient-to-bl from-sky-50 via-white to-sky-100 py-32 border-b border-slate-200/60 relative pb-48">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-16">
-            <span className="text-sky-500 font-black tracking-widest uppercase text-sm mb-2 block">Page 03</span>
-            <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-800 mb-4">Các Danh Hiệu Vĩ Đại</h3>
-            <p className="text-slate-600 max-w-2xl font-medium">Phòng trưng bày bộ sưu tập danh hiệu đồ sộ nhất lịch sử và còn vô số danh hiệu khác.</p>
-          </div>
+      {/* Page 03: The Legacy */}
+      <section id="legacy" className="bg-gradient-to-bl from-sky-50 via-white to-sky-50 py-32 border-b border-slate-200/60 relative pb-40">
+        <div className="max-w-7xl mx-auto px-6 mb-32">
+          <SectionHeader tag="Page 03" title="The Trophy Room" subtitle="Bộ sưu tập danh hiệu vĩ đại vô tiền khoáng hậu nhất lịch sử túc cầu." />
           {TROPHY_CATEGORIES.map((category, index) => (
-            <div key={index} className="mb-16 last:mb-0">
-              <h4 className="text-2xl font-bold text-slate-800 mb-8 border-b border-sky-200 pb-4 inline-block pr-12">{category.title}</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div key={index} className="mb-20 last:mb-0">
+              <h4 className="text-3xl font-bold text-slate-800 mb-10 border-b-2 border-sky-200 pb-4 inline-block pr-12">{category.title}</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
                 {category.items.map((trophy, idx) => (
-                  <motion.div key={idx} onClick={() => setActiveModal(trophy)} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} whileHover={{ y: -5, scale: 1.02 }} className="aspect-[3/4] relative rounded-3xl overflow-hidden group shadow-md border border-slate-200 hover:border-sky-400 hover:shadow-[0_15px_40px_rgba(56,189,248,0.2)] transition-all duration-500 bg-white cursor-none">
-                    {trophy.count && <div className="absolute top-4 right-4 bg-gradient-to-br from-sky-400 to-sky-600 text-white font-black text-xs md:text-sm px-3 py-1 rounded-full shadow-md z-20 border border-sky-300/50 pointer-events-none">{trophy.count}</div>}
+                  <motion.div key={idx} onClick={() => setActiveModal(trophy)} {...hoverProps} whileHover={{ y: -8, scale: 1.02 }} className="aspect-[3/4] relative rounded-3xl overflow-hidden group shadow-lg border border-slate-200 hover:border-sky-400 hover:shadow-[0_20px_50px_rgba(56,189,248,0.2)] transition-all duration-500 bg-white cursor-none">
+                    {trophy.count && <div className="absolute top-4 right-4 bg-gradient-to-br from-sky-400 to-sky-600 text-white font-black text-sm md:text-base px-4 py-1.5 rounded-full shadow-md z-20 border border-sky-300/50 pointer-events-none">{trophy.count}</div>}
                     <img src={trophy.img} alt="Trophy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-0 mix-blend-darken pointer-events-none" />
                     <div className="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none"></div>
                   </motion.div>
@@ -388,63 +413,46 @@ export default function Home() {
             </div>
           ))}
         </div>
-
-        {/* NÚT SCROLL XUỐNG PAGE 04 */}
-        <button onClick={() => scrollToSection('epilogue')} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-slate-400 hover:text-sky-500 transition-colors cursor-none group">
-          <span className="text-[10px] tracking-[0.2em] uppercase font-bold mb-1 opacity-0 group-hover:opacity-100 transition-opacity">Page 04</span>
-          <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-        </button>
+        <div className="max-w-7xl mx-auto px-6 pb-20">
+          <div className="bg-[#0b132b] rounded-[3rem] p-8 md:p-16 shadow-[0_30px_80px_rgba(0,0,0,0.5)] relative overflow-hidden border border-white/10 group">
+            <div className="absolute top-[-50%] right-[-10%] w-96 h-96 bg-sky-500/30 blur-[120px] rounded-full pointer-events-none"></div>
+            <div className="absolute bottom-[-50%] left-[-10%] w-96 h-96 bg-indigo-600/30 blur-[120px] rounded-full pointer-events-none"></div>
+            <div className="text-center mb-16 relative z-10">
+              <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-4">THE STATS LAB</h3>
+              <p className="text-sky-400 tracking-[0.2em] text-xs md:text-sm font-bold">Dữ liệu thống kê sự nghiệp vĩ đại (Cập nhật đến 2026)</p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 relative z-10">
+              {STATS_DATA.map((stat, idx) => (
+                <motion.div key={idx} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }} viewport={{ once: true }} className="text-center bg-white/5 border border-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-xl hover:bg-white/10 hover:border-sky-400/50 hover:shadow-[0_0_30px_rgba(14,165,233,0.3)] transition-all duration-300 transform hover:-translate-y-2">
+                  <h4 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 mb-4 flex justify-center items-center whitespace-nowrap">
+                    <Counter to={stat.value as number} />
+                  </h4>
+                  <p className="text-sky-400 text-[10px] md:text-xs tracking-widest font-bold uppercase">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <ScrollButton to="man" label="Page 04" hoverProps={hoverProps} />
       </section>
 
-      {/* =========================================================================================
-          TRẠM 4: LỜI KẾT 
-          ========================================================================================= */}
-      
-      <section id="epilogue" className="bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200 pt-32">
-        
-        <div className="max-w-7xl mx-auto px-6 mb-16">
-          <span className="text-sky-500 font-black tracking-widest uppercase text-sm mb-2 block">Page 04</span>
-          <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-800 mb-4">Lời Kết Cuối Cho 1 Vĩ Nhân</h3>
-          <p className="text-slate-600 max-w-2xl font-medium">
-            Chương cuối cùng của một huyền thoại. Nơi chúng ta nhìn lại những cấu trúc làm nên một thiên tài, những màu áo đã thấm đẫm vinh quang và những lời truyền tụng sẽ còn vang vọng mãi.
-          </p>
-        </div>
-
-        {/* CHỨC NĂNG 1: THE ANATOMY OF A GOAT */}
-        <div className="max-w-7xl mx-auto px-6 pb-32 border-b border-slate-300/50">
-          <div className="text-center md:text-center mb-12">
-            <span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 01</span>
-            <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Anatomy of a GOAT</h3>
-            <p className="text-slate-500 mt-2">Rê chuột vào các điểm sáng để khám phá kết cấu của một thiên tài.</p>
-          </div>
-          
+      {/* Page 04: The Man */}
+      <section id="man" className="bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200 pt-32">
+        <SectionHeader tag="Page 04" title="The Genius" subtitle="Chương cuối cùng. Nhìn lại những cấu trúc làm nên một thiên tài, những màu áo đã thấm đẫm vinh quang và những lời truyền tụng sẽ còn vang vọng mãi." />
+        <div className="max-w-7xl mx-auto px-6 pb-32 border-b border-slate-300/50 mt-16">
+          <div className="text-center mb-16"><span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 01</span><h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Anatomy of a GOAT</h3><p className="text-slate-500 mt-2">Rê chuột vào các điểm sáng để khám phá.</p></div>
           <div className="relative w-full max-w-md mx-auto h-[600px]">
-            <div className="absolute inset-0 rounded-[3rem] overflow-hidden shadow-2xl border border-slate-300/60 bg-white">
-              <img src="/anatomy-messi.png" alt="Messi Anatomy" className="w-full h-full object-cover mix-blend-darken opacity-95 pointer-events-none" />
-            </div>
-            
+            <div className="absolute inset-0 rounded-[3rem] overflow-hidden shadow-2xl border border-slate-300/60 bg-white"><img src="/anatomy-messi.png" alt="Messi Anatomy" className="w-full h-full object-cover mix-blend-darken opacity-95 pointer-events-none" /></div>
             {ANATOMY_DATA.map((spot, idx) => (
-              <div 
-                key={idx} className="absolute z-20" 
-                style={{ top: spot.top, left: spot.left }}
-                onMouseEnter={() => { setActiveAnatomy(idx); handleMouseEnter(); }}
-                onMouseLeave={() => { setActiveAnatomy(null); handleMouseLeave(); }}
-              >
-                <div className="relative flex items-center justify-center">
+              <div key={idx} className="absolute z-20" style={{ top: spot.top, left: spot.left }} onMouseEnter={() => { setActiveAnatomy(idx); hoverProps.onMouseEnter(); }} onMouseLeave={() => { setActiveAnatomy(null); hoverProps.onMouseLeave(); }}>
+                <div className="relative flex items-center justify-center cursor-none">
                   <div className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-sky-400 opacity-75"></div>
                   <div className="relative inline-flex rounded-full h-4 w-4 bg-sky-500 border-2 border-white shadow-md"></div>
                 </div>
-
                 <AnimatePresence>
                   {activeAnatomy === idx && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.9 }} 
-                      animate={{ opacity: 1, y: [0, -8, 0], scale: 1, transition: { y: { repeat: Infinity, duration: 2, ease: "easeInOut" } } }} 
-                      exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                      className="absolute left-1/2 -translate-x-1/2 mt-6 w-64 p-5 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl pointer-events-none z-[100]"
-                    >
-                      <h4 className="text-sky-600 font-black text-sm mb-2 uppercase">{spot.label}</h4>
-                      <p className="text-slate-600 text-xs leading-relaxed font-medium">{spot.content}</p>
+                    <motion.div initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: [0, -8, 0], scale: 1, transition: { y: { repeat: Infinity, duration: 2, ease: "easeInOut" } } }} exit={{ opacity: 0, y: 10, scale: 0.9 }} className="absolute left-1/2 -translate-x-1/2 mt-6 w-64 p-5 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl pointer-events-none z-[100]">
+                      <h4 className="text-sky-600 font-black text-sm mb-2 uppercase">{spot.label}</h4><p className="text-slate-600 text-xs leading-relaxed font-medium">{spot.content}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -453,197 +461,97 @@ export default function Home() {
           </div>
         </div>
 
-        {/* CHỨC NĂNG 2: THE JERSEY ROOM */}
         <div className="max-w-7xl mx-auto px-6 py-32 border-b border-slate-300/50 bg-gradient-to-b from-transparent to-[#F8F9FA]">
-          <div className="text-center md:text-center mb-12">
-            <span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 02</span>
-            <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Jersey Room</h3>
-            <p className="text-slate-500 mt-2">Nhấn vào từng chiếc áo để đọc lời nhắn gửi.</p>
-          </div>
-
+          <div className="text-center mb-16"><span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 02</span><h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Jersey Room</h3><p className="text-slate-500 mt-2">Nhấn vào từng chiếc áo để đọc lời nhắn gửi.</p></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 perspective-[1000px]">
             {JERSEYS.map((jersey) => (
-              <motion.div 
-                key={jersey.id}
-                onClick={() => setFlippedJersey(flippedJersey === jersey.id ? null : jersey.id)}
-                onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}
-                className="relative w-full h-[420px] group cursor-none"
-                style={{ transformStyle: "preserve-3d" }}
-                animate={{ rotateY: flippedJersey === jersey.id ? 180 : 0 }}
-                transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-              >
-                <div className="absolute inset-0 bg-white rounded-3xl border border-slate-200 shadow-lg overflow-hidden backface-hidden group-hover:border-sky-400 transition-colors relative flex items-center justify-center">
+              <motion.div key={jersey.id} onClick={() => setFlippedJersey(flippedJersey === jersey.id ? null : jersey.id)} {...hoverProps} className="relative w-full h-[420px] group cursor-none" style={{ transformStyle: "preserve-3d" }} animate={{ rotateY: flippedJersey === jersey.id ? 180 : 0 }} transition={{ duration: 0.6, type: "spring", stiffness: 100 }}>
+                <div className="absolute inset-0 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden backface-hidden group-hover:border-sky-400 transition-colors relative flex items-center justify-center">
                   <img src={jersey.image} alt={jersey.name} className="w-full h-full object-cover mix-blend-multiply z-10 pointer-events-none" />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent h-32 flex items-end justify-center pb-6 z-20 pointer-events-none">
-                    <h4 className="font-black text-white uppercase tracking-widest text-sm drop-shadow-md text-center px-2">{jersey.name}</h4>
-                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent h-32 flex items-end justify-center pb-6 z-20 pointer-events-none"><h4 className="font-black text-white uppercase tracking-widest text-sm drop-shadow-md text-center px-2">{jersey.name}</h4></div>
                 </div>
-                
-                <div 
-                  className="absolute inset-0 bg-slate-900 text-white rounded-3xl border border-slate-800 shadow-2xl flex flex-col items-center justify-center p-8 text-center backface-hidden overflow-y-auto hide-scrollbar pointer-events-none"
-                  style={{ transform: "rotateY(180deg)" }}
-                >
-                  <span className="text-sky-400 text-4xl mb-4 opacity-60 font-serif">"</span>
-                  <p className="text-slate-300 font-medium text-sm md:text-base leading-relaxed mb-6 italic">{jersey.message}</p>
-                  <span className="text-xs tracking-[0.2em] uppercase font-bold text-sky-500 border-t border-slate-700 pt-4 w-full mt-auto">From Fan</span>
+                <div className="absolute inset-0 bg-slate-900 text-white rounded-3xl border border-slate-800 shadow-2xl flex flex-col items-center justify-center p-8 text-center backface-hidden overflow-y-auto hide-scrollbar pointer-events-none" style={{ transform: "rotateY(180deg)" }}>
+                  <span className="text-sky-400 text-4xl mb-4 opacity-60 font-serif">"</span><p className="text-slate-300 font-medium text-sm md:text-base leading-relaxed mb-6 italic">{jersey.message}</p><span className="text-xs tracking-[0.2em] uppercase font-bold text-sky-500 border-t border-slate-700 pt-4 w-full mt-auto">From Fan</span>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* CHỨC NĂNG 3: ECHOES OF GREATNESS (ĐÃ CẬP NHẬT 6 NGƯỜI, BỐ CỤC GRID CHỐNG CẮT CHỮ) */}
         <div className="relative w-full py-32 bg-gradient-to-b from-[#F8F9FA] to-[#EAEAEB] border-b border-slate-300/50">
           <div className="max-w-7xl mx-auto px-6 relative flex flex-col items-center justify-center">
-            
-            {/* TIÊU ĐỀ PART 03 Ở GIỮA */}
-            <div className="text-center md:text-center mb-16 relative z-10">
-              <span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 03</span>
-              <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Words Of Legends</h3>
-              <p className="text-slate-500 mt-2">Dấu ấn của El Pulga trong mắt những tượng đài bóng đá thế giới.</p>
-            </div>
-
-            {/* CHỮ "END OF ERA" LÀM NỀN CHÌM */}
-            <div className="absolute inset-0 flex items-center justify-center text-center pointer-events-none z-0">
-              <h3 className="text-5xl md:text-[8rem] font-black tracking-tighter drop-shadow-sm text-transparent bg-clip-text bg-gradient-to-br from-sky-400 via-blue-600 to-indigo-800 opacity-10">
-                END OF ERA
-              </h3>
-            </div>
-
-            {/* LƯỚI 3 CỘT x 2 HÀNG ĐỂ ĐỰNG 6 CÂU NÓI KHÔNG BỊ TRÀN CHỮ */}
+            <div className="text-center mb-20 relative z-10"><span className="text-sky-600 font-bold tracking-widest uppercase text-xs mb-2 block">Part 03</span><h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">The Words Of Legends</h3><p className="text-slate-500 mt-2">Dấu ấn của El Pulga trong mắt những tượng đài bóng đá thế giới.</p></div>
+            <div className="absolute inset-0 flex items-center justify-center text-center pointer-events-none z-0"><h3 className="text-5xl md:text-[10rem] font-black tracking-tighter drop-shadow-sm text-transparent bg-clip-text bg-gradient-to-br from-sky-400 via-blue-600 to-indigo-800 opacity-[0.05]">END OF ERA</h3></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 w-full relative z-10">
               {LEGEND_QUOTES.map((item, idx) => (
-                /* HIỆU ỨNG PARALLAX NHẸ NHÀNG */
-                <motion.div
-                  key={idx}
-                  animate={{ 
-                    x: parallaxPos.x * (idx % 2 === 0 ? 15 : -15), 
-                    y: parallaxPos.y * (idx % 2 === 0 ? 15 : -15) 
-                  }}
-                  transition={{ type: "tween", ease: "easeOut", duration: 0.2 }}
-                >
-                  {/* HIỆU ỨNG LƠ LỬNG LÊN XUỐNG VÔ HẠN */}
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 4 + (idx % 3), ease: "easeInOut" }}
-                    onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}
-                    className="w-full h-auto p-6 bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200 text-center hover:shadow-2xl transition-shadow"
-                  >
-                    <img src={item.img} alt={item.author} className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover mx-auto mb-4 border-4 border-sky-100 shadow-md pointer-events-none" />
-                    <p className="text-slate-700 font-medium text-sm leading-relaxed mb-4 italic pointer-events-none">
-                      "{item.quote}"
-                    </p>
-                    <span className="font-black text-sky-600 uppercase tracking-widest text-xs block pointer-events-none">
-                      — {item.author}
-                    </span>
+                <motion.div key={idx} animate={{ x: parallax.x * (idx % 2 === 0 ? 15 : -15), y: parallax.y * (idx % 2 === 0 ? 15 : -15) }} transition={{ type: "tween", ease: "easeOut", duration: 0.2 }}>
+                  <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4 + (idx % 3), ease: "easeInOut" }} {...hoverProps} className="w-full h-full p-8 bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200 text-center hover:shadow-2xl hover:border-sky-300 transition-all cursor-none flex flex-col justify-between">
+                    <div><img src={item.img} alt={item.author} className="w-20 h-20 rounded-full object-cover mx-auto mb-6 border-4 border-sky-100 shadow-md pointer-events-none" /><p className="text-slate-700 font-medium text-base leading-relaxed mb-6 italic pointer-events-none">"{item.quote}"</p></div>
+                    <span className="font-black text-sky-600 uppercase tracking-widest text-xs block pointer-events-none">— {item.author}</span>
                   </motion.div>
                 </motion.div>
               ))}
             </div>
-
           </div>
         </div>
 
-        {/* CHỨC NĂNG 4: THE INFINITY SIGNATURE */}
         <div className="max-w-5xl mx-auto px-6 py-40 flex flex-col items-center justify-center text-center bg-gradient-to-b from-[#EAEAEB] to-slate-200 relative">
-          
           <div className="w-32 h-32 md:w-48 md:h-48 mb-6 pointer-events-none">
-            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-xl" fill="none">
-              <motion.path
-                d="M 25 25 C 10 10, 10 40, 25 25 C 40 10, 60 40, 75 25 C 90 10, 90 40, 75 25 C 60 10, 40 40, 25 25 Z"
-                stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 2, ease: "easeInOut" }}
-              />
-            </svg>
+            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-xl" fill="none"><motion.path d="M 25 25 C 10 10, 10 40, 25 25 C 40 10, 60 40, 75 25 C 90 10, 90 40, 75 25 C 60 10, 40 40, 25 25 Z" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 2, ease: "easeInOut" }} /></svg>
           </div>
-
-        
-
-          <p className="text-slate-700 text-xl md:text-3xl leading-relaxed max-w-4xl font-medium italic mb-12 pointer-events-none">
-            "Sẽ có những số 10 mới xuất hiện, nhưng thế giới sẽ không bao giờ tìm thấy một Lionel Messi thứ hai. Cảm ơn anh vì đã biến thanh xuân của chúng tôi thành một giấc mơ tuyệt đẹp."
-          </p>
-
-          <h4 className="text-5xl md:text-7xl font-black text-slate-800 uppercase tracking-widest drop-shadow-sm pointer-events-none mb-10">
-            CẢM ƠN VÌ TẤT CẢ, LEO!
-          </h4>
-          
-          {/* NÚT BACK TO TOP */}
-          <button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => scrollToSection('top')} className="absolute bottom-12 flex flex-col items-center justify-center text-slate-400 hover:text-sky-500 transition-colors cursor-none group">
-            <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
-            <span className="text-[10px] tracking-[0.2em] uppercase font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Back to Top</span>
-          </button>
+          <p className="text-slate-700 text-xl md:text-3xl leading-relaxed max-w-4xl font-medium italic mb-12 pointer-events-none">"Sẽ có những số 10 mới xuất hiện, nhưng thế giới sẽ không bao giờ tìm thấy một Lionel Messi thứ hai. Cảm ơn anh vì đã biến thanh xuân của chúng tôi thành một giấc mơ tuyệt đẹp."</p>
+          <h4 className="text-5xl md:text-7xl font-black text-slate-800 uppercase tracking-widest drop-shadow-sm pointer-events-none mb-10">CẢM ƠN VÌ TẤT CẢ, LEO!</h4>
+          <ScrollButton to="top" label="Back to Top" hoverProps={hoverProps} />
         </div>
       </section>
 
-      {/* MODAL CHI TIẾT */}
+      {/* Detail Modal */}
       <AnimatePresence>
         {activeModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md cursor-none"
-            onClick={() => setActiveModal(null)}
-          >
-            <motion.div 
-              initial={{ y: 50, scale: 0.9, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 20, scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-[#FDFDFD] border border-slate-200 p-6 md:p-8 rounded-3xl max-w-3xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto hide-scrollbar cursor-none"
-              onClick={(e) => e.stopPropagation()} 
-            >
-              <button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => setActiveModal(null)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-[#F4F4F5] hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition-colors border border-slate-200/50 shadow-sm cursor-none">✕</button>
-
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md cursor-none" onClick={() => setActiveModal(null)}>
+            <motion.div initial={{ y: 50, scale: 0.9, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 20, scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="bg-[#FDFDFD] border border-slate-200 p-8 md:p-12 rounded-3xl max-w-3xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto hide-scrollbar cursor-none" onClick={(e) => e.stopPropagation()}>
+              <button {...hoverProps} onClick={() => setActiveModal(null)} className="absolute top-6 right-6 z-50 w-12 h-12 bg-[#F4F4F5] hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition-colors border border-slate-200/50 shadow-sm cursor-none">✕</button>
               {activeModal.img ? (
                 <>
-                  <div className="w-full h-64 md:h-80 bg-[#F4F4F5] rounded-2xl flex items-center justify-center overflow-hidden mb-6 relative shadow-inner border border-slate-200/60">
-                    <img src={activeModal.img} alt={activeModal.name} className="w-full h-full object-contain p-4 drop-shadow-xl mix-blend-darken" />
+                  <div className="w-full h-72 md:h-96 bg-[#F4F4F5] rounded-3xl flex items-center justify-center overflow-hidden mb-8 relative shadow-inner border border-slate-200/60">
+                    <img src={activeModal.img} alt={activeModal.name} className="w-full h-full object-contain p-6 drop-shadow-2xl mix-blend-darken" />
                   </div>
-                  <span className="text-sky-600 font-black text-xl mb-2 block tracking-widest">{activeModal.year}</span>
-                  <h3 className="text-3xl md:text-4xl font-black text-slate-800 mb-6 uppercase">{activeModal.name} {activeModal.count && <span className="text-sky-500">({activeModal.count})</span>}</h3>
-                  <p className="text-slate-600 leading-relaxed text-lg text-justify whitespace-pre-line">{activeModal.story}</p>
+                  <span className="text-sky-600 font-black text-2xl mb-2 block tracking-widest">{activeModal.year}</span>
+                  <h3 className="text-4xl md:text-5xl font-black text-slate-800 mb-6 uppercase">{activeModal.name} {activeModal.count && <span className="text-sky-500">({activeModal.count})</span>}</h3>
+                  <p className="text-slate-600 leading-relaxed text-xl text-justify whitespace-pre-line">{activeModal.story}</p>
                 </>
               ) : activeModal.goals ? (
                 <>
-                  <div className="w-full h-64 md:h-80 bg-[#F4F4F5] rounded-2xl flex items-center justify-center overflow-hidden mb-6 relative shadow-inner border border-slate-200/60">
+                  <div className="w-full h-72 md:h-96 bg-[#F4F4F5] rounded-3xl flex items-center justify-center overflow-hidden mb-8 relative shadow-inner border border-slate-200/60">
                     <img src={activeModal.image} alt={activeModal.name} className="w-full h-full object-cover mix-blend-darken" />
                   </div>
-                  <span className="text-sky-600 font-black text-xl mb-2 block">World Cup {activeModal.year}</span>
-                  <h3 className="text-3xl font-black text-slate-800 mb-2">{activeModal.name}</h3>
-                  <p className="inline-block bg-sky-50 text-sky-700 px-3 py-1 rounded-lg text-sm font-bold mb-6 border border-sky-100">Thành tích: {activeModal.goals}</p>
-                  <p className="text-slate-600 leading-relaxed text-lg">{activeModal.memory}</p>
+                  <span className="text-sky-600 font-black text-2xl mb-2 block">World Cup {activeModal.year}</span>
+                  <h3 className="text-4xl md:text-5xl font-black text-slate-800 mb-4">{activeModal.name}</h3>
+                  <p className="inline-block bg-sky-50 text-sky-700 px-4 py-2 rounded-xl text-base font-bold mb-6 border border-sky-100">Thành tích: {activeModal.goals}</p>
+                  <p className="text-slate-600 leading-relaxed text-xl">{activeModal.memory}</p>
                 </>
-              ) : (
-                <>
-                  <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-[#F4F4F5] rounded-2xl overflow-hidden mb-8 group shadow-inner">
-                    <AnimatePresence mode="wait">
-                      <motion.img key={currentImageIndex} src={activeModal.images[currentImageIndex]} initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} alt="Story Image" className="w-full h-full object-cover"/>
-                    </AnimatePresence>
-                    <button onClick={prevImage} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-slate-800 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-slate-200 shadow-md cursor-none">←</button>
-                    <button onClick={nextImage} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-slate-800 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-slate-200 shadow-md cursor-none">→</button>
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                      {activeModal.images.map((_: any, idx: number) => (
-                        <div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentImageIndex ? 'w-6 bg-sky-500' : 'w-2 bg-slate-300'}`} />
-                      ))}
-                    </div>
-                  </div>
-                  <span className="text-sky-600 font-black tracking-widest text-sm mb-2 block">{activeModal.title}</span>
-                  <h4 className="text-2xl text-slate-800 font-bold mb-6">{activeModal.subtitle}</h4>
-                  <p className="text-slate-600 leading-relaxed text-justify whitespace-pre-line text-lg">{activeModal.content}</p>
-                </>
-              )}
+              ) : null}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
       
       <footer className="py-8 text-center relative z-10 bg-slate-200 border-t border-slate-300/50">
-        <p className="text-xs tracking-widest text-slate-500 uppercase font-bold">
-          © 2026 All rights reserved by Nguyen Minh Tri.
-        </p>
+        <p className="text-xs tracking-widest text-slate-500 uppercase font-bold">© 2026 All rights reserved by Nguyễn Minh Trí.</p>
       </footer>
       
       <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        * { font-family: 'Inter', sans-serif !important; }
+        
         .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         .perspective-[1000px] { perspective: 1000px; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon, .goog-te-gadget-simple, #goog-gt-tt, .goog-tooltip, .goog-tooltip:hover { display: none !important; }
+        body { top: 0px !important; }
+        .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; border: none !important; }
       `}} />
     </main>
   );
